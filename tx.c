@@ -4,6 +4,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,6 +19,11 @@
 #define TX_QUIT_TIMES 3
 
 #define CTRL_KEY(k) ((k) & 0x1f)
+
+enum editorMode {
+  MODE_NORMAL,
+  MODE_INSERT,
+};
 
 enum editorKey {
   BACKSPACE = 127,
@@ -49,6 +55,7 @@ struct editorConfig {
   int numrows;
   erow *row;
   int dirty;
+  int mode;
   char *filename;
   char statusmsg[80];
   time_t statusmsg_time;
@@ -58,6 +65,8 @@ struct editorConfig {
 struct editorConfig E;
 
 void editorSetStatusMessage(const char *fmt, ...);
+void editorRefreshScreen();
+char *editorPrompt(char *prompt);
 
 void die(const char *s) {
   write(STDOUT_FILENO, "\x1b[2J", 4);
@@ -372,8 +381,13 @@ void editorOpen(char *filename) {
 }
 
 void editorSave() {
-  if (E.filename == NULL)
-    return;
+  if (E.filename == NULL) {
+    E.filename = editorPrompt("Write buffer as: %s");
+    if (E.filename == NULL) {
+      editorSetStatusMessage("Write aborted.");
+      return;
+    }
+  }
   int len;
   char *buf = editorRowsToString(&len);
   int fd = open(E.filename, O_RDWR | O_CREAT, 0644);
@@ -533,6 +547,37 @@ void editorSetStatusMessage(const char *fmt, ...) {
   E.statusmsg_time = time(NULL);
 }
 
+char *editorPrompt(char *prompt) {
+  size_t bufsize = 128;
+  char *buf = malloc(bufsize);
+  size_t buflen = 0;
+  buf[0] = '\0';
+  while (1) {
+    editorSetStatusMessage(prompt, buf);
+    editorRefreshScreen();
+    int c = editorReadKey();
+    if (c == DEL_KEY || c == CTRL_KEY('h') || c == BACKSPACE) {
+      if (buflen != 0) buf[--buflen] = '\0';
+    } else if (c == '\x1b') { 
+      editorSetStatusMessage("");
+      free(buf);
+      return NULL;
+    } else if (c == '\r') {
+      if (buflen != 0) {
+        editorSetStatusMessage("");
+        return buf;
+      }
+    } else if (!iscntrl(c) && c < 128) {
+      if (buflen == bufsize - 1) {
+        bufsize *= 2;
+        buf = realloc(buf, bufsize);
+      }
+      buf[buflen++] = c;
+      buf[buflen] = '\0';
+    }
+  }
+}
+
 void editorMoveCursor(int key) {
   erow *row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
   switch (key) {
@@ -653,6 +698,7 @@ void initEditor() {
   E.numrows = 0;
   E.row = NULL;
   E.dirty = 0;
+  E.mode = MODE_NORMAL;
   E.filename = NULL;
   E.statusmsg[0] = '\0';
   E.statusmsg_time = 0;
