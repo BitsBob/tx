@@ -1,5 +1,4 @@
-#include "tx.h";
-#include <math.h>
+#include "tx.h"
 
 struct abuf {
   char *b;
@@ -143,6 +142,12 @@ void editorRefreshScreen() {
   editorDrawRows(&ab);
   editorDrawStatusBar(&ab);
   editorDrawMessageBar(&ab);
+
+  if (E.mode == MODE_INSERT) {
+    abAppend(&ab, "\x1b[6 q", 5);
+  } else {
+    abAppend(&ab, "\x1b[2 q", 5);
+  }
 
   char buf[32];
   snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1,

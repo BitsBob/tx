@@ -72,7 +72,7 @@ void editorMoveCursor(int key) {
   }
 }
 
-void editorprocessKeypress() {
+void editorProcessKeypress() {
   int c = editorReadKey();
 
   switch (E.mode) {
@@ -115,6 +115,10 @@ void editorProcessNormalMode(int c) {
       break;
 
   }
+}
+
+void handleCommandMode() {
+  return;
 }
 
 void editorProcessInsertMode(int c) {
