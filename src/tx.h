@@ -26,6 +26,7 @@
 enum editorMode {
   MODE_NORMAL,
   MODE_INSERT,
+  MODE_COMMAND,
 };
 
 enum editorKey {

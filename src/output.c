@@ -1,4 +1,5 @@
 #include "tx.h";
+#include <math.h>
 
 struct abuf {
   char *b;
@@ -76,26 +77,48 @@ void editorDrawRows(struct abuf *ab) {
   }
 }
 
+void *editorModeToString() {
+  switch (E.mode) {
+  case MODE_INSERT:
+    return " INSERT ";
+  case MODE_COMMAND:
+    return " COMMAND ";
+  default:
+    return " NORMAL ";
+  }
+}
+
 void editorDrawStatusBar(struct abuf *ab) {
-  abAppend(ab, "\x1b[7m", 4);
+  abAppend(ab, "\x1b[7m", 4); // Invert colors
+
+  char *modename = editorModeToString();
+  int modelen = strlen(modename);
+  abAppend(ab, modename, modelen);
+
   char status[80], rstatus[80];
-  int len = snprintf(status, sizeof(status), "%.20s - %d lines %s",
+  int len = snprintf(status, sizeof(status), " %.20s - %d lines %s",
                      E.filename ? E.filename : "[No Name]", E.numrows,
                      E.dirty ? "(modified)" : "");
 
-  int rlen = snprintf(rstatus, sizeof(rstatus), "%d/%d", E.cy + 1, E.numrows);
-  if (len > E.screencols)
-    len = E.screencols;
+  int rlen = snprintf(rstatus, sizeof(rstatus), " %d/%d ", E.cy + 1, E.numrows);
+
+  if (len + modelen > E.screencols) {
+    len = E.screencols - modelen;
+  }
   abAppend(ab, status, len);
-  while (len < E.screencols) {
-    if (E.screencols - len == rlen) {
+
+  int used_width = len + modelen;
+
+  while (used_width < E.screencols) {
+    if (E.screencols - used_width == rlen) {
       abAppend(ab, rstatus, rlen);
       break;
     } else {
       abAppend(ab, " ", 1);
-      len++;
+      used_width++;
     }
   }
+
   abAppend(ab, "\x1b[m", 3);
   abAppend(ab, "\r\n", 2);
 }
@@ -139,5 +162,3 @@ void editorSetStatusMessage(const char *fmt, ...) {
   va_end(ap);
   E.statusmsg_time = time(NULL);
 }
-
-
