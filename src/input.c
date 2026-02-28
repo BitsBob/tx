@@ -4,24 +4,29 @@ void editorProcessInsertMode(int c);
 void editorProcessNormalMode(int c);
 void handleCommandMode();
 
-char *editorPrompt(char *prompt) {
+char *editorPrompt(char *prompt, void (*callback)(char *, int)) {
   size_t bufsize = 128;
   char *buf = malloc(bufsize);
   size_t buflen = 0;
   buf[0] = '\0';
+
   while (1) {
     editorSetStatusMessage(prompt, buf);
     editorRefreshScreen();
+
     int c = editorReadKey();
+
     if (c == DEL_KEY || c == CTRL_KEY('h') || c == BACKSPACE) {
       if (buflen != 0) buf[--buflen] = '\0';
-    } else if (c == '\x1b') { 
+    } else if (c == '\x1b') {
       editorSetStatusMessage("");
+      if (callback) callback(buf, c);
       free(buf);
       return NULL;
     } else if (c == '\r') {
       if (buflen != 0) {
         editorSetStatusMessage("");
+        if (callback) callback(buf, c);
         return buf;
       }
     } else if (!iscntrl(c) && c < 128) {
@@ -32,9 +37,10 @@ char *editorPrompt(char *prompt) {
       buf[buflen++] = c;
       buf[buflen] = '\0';
     }
+
+    if (callback) callback(buf, c);
   }
 }
-
 
 void editorMoveCursor(int key) {
   erow *row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
@@ -95,6 +101,26 @@ void editorProcessNormalMode(int c) {
       handleCommandMode();
       break;
 
+    case '/':
+      {
+        E.last_cx = E.cx;
+        E.last_cy = E.cy;
+        
+        E.last_rowoff = E.rowoff;
+        E.last_coloff = E.coloff;
+
+        char *query = editorPrompt("/%s", editorFindCallback);
+        if (query) {
+          free(query);
+        } else {
+          E.cx = E.last_cx;
+          E.cy = E.last_cy;
+          E.rowoff = E.last_rowoff;
+          E.coloff = E.last_coloff; 
+        }
+      }
+      break;
+
 
     case ARROW_UP:
     case ARROW_DOWN:
@@ -118,7 +144,28 @@ void editorProcessNormalMode(int c) {
 }
 
 void handleCommandMode() {
-  return;
+    char *cmd = editorPrompt(":%s", NULL);
+
+    if (cmd == NULL) return;
+
+    if (strcmp(cmd, "q") == 0) {
+        if (E.dirty) {
+            editorSetStatusMessage("No write since last change (add ! to override)");
+        } else {
+            exit(0);
+        }
+    } else if (strcmp(cmd, "q!") == 0) {
+        exit(0);
+    } else if (strcmp(cmd, "w") == 0) {
+        editorSave();
+    } else if (strcmp(cmd, "wq") == 0) {
+        editorSave();
+        exit(0);
+    } else {
+        editorSetStatusMessage("Unknown command: %s", cmd);
+    }
+
+    free(cmd);
 }
 
 void editorProcessInsertMode(int c) {

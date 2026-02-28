@@ -5,9 +5,13 @@ struct editorConfig E;
 void initEditor() {
   E.cx = 0;
   E.cy = 0;
+  E.last_cy = 0;
+  E.last_cy = 0;
   E.rx = 0;
   E.rowoff = 0;
   E.coloff = 0;
+  E.last_rowoff = 0;
+  E.last_coloff = 0;
   E.numrows = 0;
   E.row = NULL;
   E.dirty = 0;

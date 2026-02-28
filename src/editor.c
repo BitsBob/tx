@@ -1,5 +1,43 @@
 #include "tx.h"
 
+void editorFindCallback(char *query, int key) {
+  static int last_match = -1;
+  static int direction = 1;
+
+  if (key == '\r' || key == '\x1b') {
+    last_match = -1;
+    direction = 1;
+    return;
+  }
+
+  if (key == ARROW_DOWN || key == ARROW_RIGHT) {
+    direction = 1;
+  } else if (key == ARROW_UP || key == ARROW_LEFT) {
+    direction = -1;
+  } else {
+    last_match = -1;
+    direction = 1;
+  }
+
+  if (last_match == -1) direction = 1;
+  int current = last_match;
+
+  for (int i=0; i<E.numrows; i++) {
+    current += direction;
+    if (current == -1) current = E.numrows - 1;
+    else if (current == E.numrows) current = 0;
+
+    erow *row = &E.row[current];
+    char *match = strstr(row -> render, query);
+    if (match) {
+      last_match = current;
+      E.cy = current;
+      E.cx = editorRowCxToRx(row, match - row->render);
+      E.rowoff = E.numrows;
+    }
+  }
+}
+
 void editorOpen(char *filename) {
   free(E.filename);
   E.filename = strdup(filename);
@@ -22,7 +60,7 @@ void editorOpen(char *filename) {
 
 void editorSave() {
   if (E.filename == NULL) {
-    E.filename = editorPrompt("Write buffer as: %s");
+    E.filename = editorPrompt("Write buffer as: %s", NULL);
     if (E.filename == NULL) {
       editorSetStatusMessage("Write aborted.");
       return;

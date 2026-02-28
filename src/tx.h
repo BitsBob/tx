@@ -51,9 +51,12 @@ typedef struct erow {
 
 struct editorConfig {
   int cx, cy;
+  int last_cx, last_cy;
   int rx;
   int rowoff;
   int coloff;
+  int last_rowoff;
+  int last_coloff;
   int screenrows;
   int screencols;
   int numrows;
@@ -85,6 +88,7 @@ void editorInsertNewline();
 void editorInsertRow(int at, char *s, size_t len);
 char *editorRowsToString(int *buflen);
 int editorRowCxToRx(erow *row, int rx);
+void editorFindCallback(char *query, int key);
 
 // output.c
 void editorRefreshScreen();
@@ -92,6 +96,7 @@ void editorSetStatusMessage(const char *fmt, ...);
 
 // input.c
 void editorProcessKeypress();
-char *editorPrompt(char *prompt);
+char *editorPrompt(char *prompt, void (*callback)(char *, int));
 
 #endif
+
