@@ -2,6 +2,7 @@
 
 void editorProcessInsertMode(int c);
 void editorProcessNormalMode(int c);
+void editorProcessVisualMode(int c);
 void handleCommandMode();
 
 char *editorPrompt(char *prompt, void (*callback)(char *, int)) {
@@ -88,8 +89,42 @@ void editorProcessKeypress() {
     case MODE_INSERT:
       editorProcessInsertMode(c);
       break;
+    case MODE_VISUAL:
+      editorProcessVisualMode(c);
   }
 }
+
+void editorProcessVisualMode(int c) {
+  switch (c) {
+    case '\x1b':
+      E.mode = MODE_NORMAL;
+      break;
+
+    case ARROW_UP:
+    case ARROW_DOWN:
+    case ARROW_LEFT:
+    case ARROW_RIGHT:
+      editorMoveCursor(c);
+      break;
+
+    case 'h':
+      editorMoveCursor(ARROW_LEFT);
+      break;
+    case 'j':
+      editorMoveCursor(ARROW_DOWN);
+      break;
+    case 'k':
+      editorMoveCursor(ARROW_UP);
+      break;
+    case 'l':
+      editorMoveCursor(ARROW_RIGHT);
+      break;
+
+    default:
+      break;
+  }
+}
+
 
 void editorProcessNormalMode(int c) {
   switch (c) {
@@ -120,10 +155,16 @@ void editorProcessNormalMode(int c) {
       break;
 
     case 'h':
+      editorMoveCursor(ARROW_LEFT);
+      break;
     case 'j':
+      editorMoveCursor(ARROW_DOWN);
+      break;
     case 'k':
+      editorMoveCursor(ARROW_UP);
+      break;
     case 'l':
-      editorMoveCursor(c);
+      editorMoveCursor(ARROW_RIGHT);
       break;
 
     case CTRL_KEY('q'):
