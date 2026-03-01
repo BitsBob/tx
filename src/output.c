@@ -38,6 +38,22 @@ void editorScroll() {
   }
 }
 
+int isCharSelected(int x, int y) {
+    int start_y = E.vis_start_cy, start_x = E.vis_start_cx;
+    int end_y = E.cy, end_x = E.rx;
+
+    if (start_y > end_y || (start_y == end_y && start_x > end_x)) {
+        int tmp_y = start_y; start_y = end_y; end_y = tmp_y;
+        int tmp_x = start_x; start_x = end_x; end_x = tmp_x;
+    }
+
+    if (y < start_y || y > end_y) return 0;
+    if (y == start_y && y == end_y) return (x >= start_x && x <= end_x);
+    if (y == start_y) return (x >= start_x);
+    if (y == end_y) return (x <= end_x);
+    return 1;
+}
+
 void editorDrawRows(struct abuf *ab) {
   int y;
   for (y = 0; y < E.screenrows; y++) {
@@ -64,11 +80,26 @@ void editorDrawRows(struct abuf *ab) {
       }
     } else {
       int len = E.row[filerow].rsize - E.coloff;
-      if (len < 0)
-        len = 0;
-      if (len > E.screencols)
-        len = E.screencols;
-      abAppend(ab, &E.row[filerow].render[E.coloff], len);
+      if (len < 0) len = 0;
+      if (len > E.screencols) len = E.screencols;
+
+      char *render = &E.row[filerow].render[E.coloff];
+      int in_selection = 0;
+
+      for (int j=0; j<len; j++) {
+        int selected = (E.mode == MODE_VISUAL && isCharSelected(j + E.coloff, filerow));
+
+        if (selected && !in_selection) {
+            abAppend(ab, "\x1b[48;5;250;30m", 13);
+            in_selection = 1;
+        } else if (!selected && in_selection) {
+            abAppend(ab, "\x1b[m", 3);
+            in_selection = 0;
+        }
+        abAppend(ab, &render[j], 1);
+      }
+
+      if (in_selection) abAppend(ab, "\x1b[m", 3);
     }
 
     abAppend(ab, "\x1b[K", 3);
@@ -100,6 +131,8 @@ void editorDrawStatusBar(struct abuf *ab) {
                      E.dirty ? "(modified)" : "");
 
   int rlen = snprintf(rstatus, sizeof(rstatus), " %d/%d ", E.cy + 1, E.numrows);
+  
+  if (modelen > E.screencols) modelen = E.screencols;
 
   if (len + modelen > E.screencols) {
     len = E.screencols - modelen;

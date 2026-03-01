@@ -27,6 +27,7 @@ enum editorMode {
   MODE_NORMAL,
   MODE_INSERT,
   MODE_COMMAND,
+  MODE_VISUAL,
 };
 
 enum editorKey {
@@ -63,6 +64,8 @@ struct editorConfig {
   erow *row;
   int dirty;
   int mode;
+  int vis_start_cx, vis_start_cy;
+  char *yank_buffer;
   char *filename;
   char statusmsg[80];
   time_t statusmsg_time;
@@ -88,7 +91,7 @@ void editorInsertNewline();
 void editorInsertRow(int at, char *s, size_t len);
 char *editorRowsToString(int *buflen);
 int editorRowCxToRx(erow *row, int rx);
-void editorFindCallback(char *query, int key);
+void editorFind();
 
 // output.c
 void editorRefreshScreen();

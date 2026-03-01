@@ -97,28 +97,18 @@ void editorProcessNormalMode(int c) {
       E.mode = MODE_INSERT;
       break;
 
+    case 'v':
+      E.mode = MODE_VISUAL;
+      E.vis_start_cx = E.cx;
+      E.vis_start_cy = E.cy;
+      break;
+
     case ':':
       handleCommandMode();
       break;
 
     case '/':
-      {
-        E.last_cx = E.cx;
-        E.last_cy = E.cy;
-        
-        E.last_rowoff = E.rowoff;
-        E.last_coloff = E.coloff;
-
-        char *query = editorPrompt("/%s", editorFindCallback);
-        if (query) {
-          free(query);
-        } else {
-          E.cx = E.last_cx;
-          E.cy = E.last_cy;
-          E.rowoff = E.last_rowoff;
-          E.coloff = E.last_coloff; 
-        }
-      }
+      editorFind();
       break;
 
 
@@ -161,7 +151,9 @@ void handleCommandMode() {
     } else if (strcmp(cmd, "wq") == 0) {
         editorSave();
         exit(0);
-    } else {
+    } else if (strcmp(cmd, "f") == 0 || strcmp(cmd, "find")) {
+      editorFind();
+    }else {
         editorSetStatusMessage("Unknown command: %s", cmd);
     }
 
