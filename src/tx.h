@@ -1,9 +1,7 @@
 #ifndef TX_H
 #define TX_H
+#define _POSIX_C_SOURCE 200809L
 
-#define _DEFAULT_SOURCE
-#define _BSD_SOURCE
-#define _GNU_SOURCE
 
 #include <errno.h>
 #include <fcntl.h>
@@ -17,6 +15,11 @@
 #include <time.h>
 #include <unistd.h>
 
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
+#define _GNU_SOURCE
+
+#define MAX_YANKS 10
 #define TX_VERSION "0.0.1"
 #define TX_TAB_STOP 8
 #define TX_QUIT_TIMES 3
@@ -42,6 +45,9 @@ enum editorKey {
   PAGE_UP,
   PAGE_DOWN,
 };
+
+extern char *YANKED_TEXT;
+extern size_t YANKED_LEN;
 
 typedef struct erow {
   int size;
@@ -92,6 +98,8 @@ void editorInsertRow(int at, char *s, size_t len);
 char *editorRowsToString(int *buflen);
 int editorRowCxToRx(erow *row, int rx);
 void editorFind();
+void editorPaste();
+void editorYankSelection();
 
 // output.c
 void editorRefreshScreen();

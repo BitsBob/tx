@@ -1,5 +1,8 @@
 #include "tx.h"
 
+char *YANKED_TEXT = NULL;
+size_t YANKED_LEN = 0;
+
 int editorRowRxToCx(erow *row, int rx);
 
 void editorFindCallback(char *query, int key) {
@@ -263,4 +266,64 @@ char *editorRowsToString(int *buflen) {
     p++;
   }
   return buf;
+}
+
+void editorYankSelection() {
+  if (E.mode != MODE_VISUAL) return;
+
+  int start_y = E.vis_start_cy;
+  int end_y   = E.cy;
+  int start_x = E.vis_start_cx;
+  int end_x   = E.cx;
+
+  if (start_y > end_y || (start_y == end_y && start_x > end_x)) {
+    int tmp_y = start_y; start_y = end_y; end_y = tmp_y;
+    int tmp_x = start_x; start_x = end_x; end_x = tmp_x;
+  }
+
+  size_t total_len = 0;
+  for (int y = start_y; y <= end_y; y++) {
+    int row_start = (y == start_y) ? start_x : 0;
+    int row_end   = (y == end_y) ? end_x : E.row[y].size;
+    total_len += row_end - row_start;
+    if (y != end_y) total_len += 1; // newline between rows
+  }
+
+  free(YANKED_TEXT);
+  YANKED_TEXT = malloc(total_len + 1);
+  YANKED_LEN = total_len;
+
+  size_t idx = 0;
+  for (int y = start_y; y <= end_y; y++) {
+    int row_start = (y == start_y) ? start_x : 0;
+    int row_end   = (y == end_y) ? end_x : E.row[y].size;
+
+    for (int x = row_start; x < row_end; x++) {
+      YANKED_TEXT[idx++] = E.row[y].chars[x];
+    }
+
+    if (y != end_y) {
+      YANKED_TEXT[idx++] = '\n';
+    }
+  }
+
+  YANKED_TEXT[idx] = '\0';
+  editorSetStatusMessage("Yanked %zu bytes", YANKED_LEN);
+
+  E.mode = MODE_NORMAL;
+}
+
+void editorPaste() {
+  if (!YANKED_TEXT || YANKED_LEN == 0) return;
+
+  for (size_t i = 0; i < YANKED_LEN; i++) {
+    char c = YANKED_TEXT[i];
+    if (c == '\n') {
+      editorInsertNewline();
+    } else {
+      editorInsertChar(c);
+    }
+  }
+
+  editorSetStatusMessage("Pasted %zu bytes", YANKED_LEN);
 }

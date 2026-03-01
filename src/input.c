@@ -96,6 +96,12 @@ void editorProcessKeypress() {
 
 void editorProcessVisualMode(int c) {
   switch (c) {
+    case 'y':
+      editorYankSelection();
+      break;
+    case 'p':
+      editorPaste();
+      break;
     case '\x1b':
       E.mode = MODE_NORMAL;
       break;
@@ -165,6 +171,9 @@ void editorProcessNormalMode(int c) {
       break;
     case 'l':
       editorMoveCursor(ARROW_RIGHT);
+      break;
+    case 'p':
+      editorPaste();
       break;
 
     case CTRL_KEY('q'):
