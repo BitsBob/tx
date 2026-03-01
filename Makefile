@@ -22,4 +22,7 @@ $(BUILD_DIR):
 clean:
 	rm -rf $(BUILD_DIR)/*.o $(TARGET)
 
+run: all
+	./$(TARGET) $(ARGS)
+
 .PHONY: all clean
