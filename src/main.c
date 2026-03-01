@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
     editorOpen(argv[1]);
   }
 
-  editorSetStatusMessage("HELP: Ctrl-Q to quit.");
+  editorSetFortuneStatusMessage();
 
   while (1) {
     editorRefreshScreen();

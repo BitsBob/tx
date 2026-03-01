@@ -96,6 +96,7 @@ void editorFind();
 // output.c
 void editorRefreshScreen();
 void editorSetStatusMessage(const char *fmt, ...);
+void editorSetFortuneStatusMessage();
 
 // input.c
 void editorProcessKeypress();

@@ -98,9 +98,9 @@ void editorProcessNormalMode(int c) {
       break;
 
     case 'v':
-      E.mode = MODE_VISUAL;
       E.vis_start_cx = E.cx;
       E.vis_start_cy = E.cy;
+      E.mode = MODE_VISUAL;
       break;
 
     case ':':

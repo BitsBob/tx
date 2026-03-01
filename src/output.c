@@ -39,19 +39,23 @@ void editorScroll() {
 }
 
 int isCharSelected(int x, int y) {
-    int start_y = E.vis_start_cy, start_x = E.vis_start_cx;
-    int end_y = E.cy, end_x = E.rx;
+  int start_y = E.vis_start_cy;
+  int end_y = E.cy;
 
-    if (start_y > end_y || (start_y == end_y && start_x > end_x)) {
-        int tmp_y = start_y; start_y = end_y; end_y = tmp_y;
-        int tmp_x = start_x; start_x = end_x; end_x = tmp_x;
-    }
+  int start_x = editorRowCxToRx(&E.row[start_y], E.vis_start_cx);
+  int end_x   = E.rx;
 
-    if (y < start_y || y > end_y) return 0;
-    if (y == start_y && y == end_y) return (x >= start_x && x <= end_x);
-    if (y == start_y) return (x >= start_x);
-    if (y == end_y) return (x <= end_x);
-    return 1;
+  if (start_y > end_y ||
+     (start_y == end_y && start_x > end_x)) {
+    int tmp_y = start_y; start_y = end_y; end_y = tmp_y;
+    int tmp_x = start_x; start_x = end_x; end_x = tmp_x;
+     }
+
+  if (y < start_y || y > end_y) return 0;
+  if (y == start_y && y == end_y) return (x >= start_x && x <= end_x);
+  if (y == start_y) return (x >= start_x);
+  if (y == end_y) return (x <= end_x);
+  return 1;
 }
 
 void editorDrawRows(struct abuf *ab) {
@@ -90,7 +94,7 @@ void editorDrawRows(struct abuf *ab) {
         int selected = (E.mode == MODE_VISUAL && isCharSelected(j + E.coloff, filerow));
 
         if (selected && !in_selection) {
-            abAppend(ab, "\x1b[48;5;250;30m", 13);
+            abAppend(ab, "\x1b[7m", 4);
             in_selection = 1;
         } else if (!selected && in_selection) {
             abAppend(ab, "\x1b[m", 3);
@@ -199,4 +203,25 @@ void editorSetStatusMessage(const char *fmt, ...) {
   vsnprintf(E.statusmsg, sizeof(E.statusmsg), fmt, ap);
   va_end(ap);
   E.statusmsg_time = time(NULL);
+}
+
+void editorSetFortuneStatusMessage() {
+  FILE *fp = popen("fortune -s 2>/dev/null", "r");
+  if (!fp) {
+    editorSetStatusMessage("Unfortunate.");
+    return;
+  }
+
+  char buffer[1024];
+  size_t len = fread(buffer, 1, sizeof(buffer) - 1, fp);
+  buffer[len] = '\0';
+
+  pclose(fp);
+
+  for (size_t i = 0; i < len; i++) {
+    if (buffer[i] == '\n')
+      buffer[i] = ' ';
+  }
+
+  editorSetStatusMessage("%s", buffer);
 }
