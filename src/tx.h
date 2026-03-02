@@ -3,9 +3,9 @@
 #define _POSIX_C_SOURCE 200809L
 
 
+#include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -57,48 +57,48 @@ typedef struct erow {
 } erow;
 
 struct editorConfig {
-  int cx, cy;
-  int last_cx, last_cy;
-  int rx;
-  int rowoff;
-  int coloff;
-  int last_rowoff;
-  int last_coloff;
-  int screenrows;
-  int screencols;
-  int numrows;
-  erow *row;
-  int dirty;
-  int mode;
-  int vis_start_cx, vis_start_cy;
-  char *yank_buffer;
   char *filename;
+  char *yank_buffer;
   char statusmsg[80];
-  time_t statusmsg_time;
+  erow *row;
+  int coloff;
+  int cx, cy;
+  int dirty;
+  int last_coloff;
+  int last_cx, last_cy;
+  int last_rowoff;
+  int mode;
+  int numrows;
+  int rowoff;
+  int rx;
+  int screencols;
+  int screenrows;
+  int vis_start_cx, vis_start_cy;
   struct termios orig_termios;
+  time_t statusmsg_time;
 };
 
 extern struct editorConfig E;
 
 // terminal.c
-void enableRawMode();
-void disableRawMode();
 int editorReadKey();
 int getWindowSize(int *rows, int *cols);
 void die(const char *s);
+void disableRawMode();
+void enableRawMode();
 
 // editor.c
-void editorOpen(char *filename);
-void editorSave();
-void editorInsertChar(int c);
-void editorDelChar();
-void editorUpdateRow(erow *row);
-void editorInsertNewline();
-void editorInsertRow(int at, char *s, size_t len);
 char *editorRowsToString(int *buflen);
 int editorRowCxToRx(erow *row, int rx);
+void editorDelChar();
 void editorFind();
+void editorInsertChar(int c);
+void editorInsertNewline();
+void editorInsertRow(int at, char *s, size_t len);
+void editorOpen(char *filename);
 void editorPaste();
+void editorSave();
+void editorUpdateRow(erow *row);
 void editorYankSelection();
 
 // output.c

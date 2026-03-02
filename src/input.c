@@ -195,8 +195,10 @@ void handleCommandMode() {
             exit(0);
         }
     } else if (strcmp(cmd, "q!") == 0) {
+        disableRawMode();
         exit(0);
     } else if (strcmp(cmd, "w") == 0) {
+        disableRawMode();  
         editorSave();
     } else if (strcmp(cmd, "wq") == 0) {
         editorSave();
