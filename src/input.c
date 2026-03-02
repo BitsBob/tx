@@ -5,6 +5,13 @@ void editorProcessNormalMode(int c);
 void editorProcessVisualMode(int c);
 void handleCommandMode();
 
+int findNextWordBoundary(erow *row, int startCx) {
+  int i = startCx;
+  while (i < row->size && !isspace(row->chars[i])) i++;
+  while (i < row->size && isspace(row->chars[i])) i++;
+  return i;
+}
+
 char *editorPrompt(char *prompt, void (*callback)(char *, int)) {
   size_t bufsize = 128;
   char *buf = malloc(bufsize);
@@ -137,6 +144,7 @@ void editorProcessNormalMode(int c) {
     case 'i':
       E.mode = MODE_INSERT;
       break;
+
 
     case 'v':
       E.vis_start_cx = E.cx;

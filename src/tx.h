@@ -70,6 +70,7 @@ struct editorConfig {
   int mode;
   int numrows;
   int rowoff;
+  int pendingOp;
   int rx;
   int screencols;
   int screenrows;
