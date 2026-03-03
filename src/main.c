@@ -1,5 +1,6 @@
 #include "tx.h"
 
+
 struct editorConfig E;
 
 void initEditor() {
