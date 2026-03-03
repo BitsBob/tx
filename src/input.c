@@ -3,6 +3,7 @@
 void editorProcessInsertMode(int c);
 void editorProcessNormalMode(int c);
 void editorProcessVisualMode(int c);
+void editorJumpToEnd();
 void handleCommandMode();
 
 char *editorPrompt(char *prompt, void (*callback)(char *, int)) {
@@ -105,6 +106,10 @@ void editorProcessVisualMode(int c) {
     case '\x1b':
       E.mode = MODE_NORMAL;
       break;
+    
+    case 'G':
+      editorJumpToEnd();
+      break;
 
     case ARROW_UP:
     case ARROW_DOWN:
@@ -147,6 +152,13 @@ void editorProcessNormalMode(int c) {
     case ':':
       handleCommandMode();
       break;
+    
+    case 'g':
+      break;
+
+    case 'G':
+      editorJumpToEnd();
+      break;
 
     case '/':
       editorFind();
@@ -184,32 +196,35 @@ void editorProcessNormalMode(int c) {
 }
 
 void handleCommandMode() {
-    char *cmd = editorPrompt(":%s", NULL);
+  char *cmd = editorPrompt(":%s", NULL);
 
-    if (cmd == NULL) return;
+  if (cmd == NULL) return;
 
-    if (strcmp(cmd, "q") == 0) {
-        if (E.dirty) {
-            editorSetStatusMessage("No write since last change (add ! to override)");
-        } else {
-            exit(0);
-        }
-    } else if (strcmp(cmd, "q!") == 0) {
-        disableRawMode();
-        exit(0);
-    } else if (strcmp(cmd, "w") == 0) {
-        disableRawMode();  
-        editorSave();
-    } else if (strcmp(cmd, "wq") == 0) {
-        editorSave();
-        exit(0);
-    } else if (strcmp(cmd, "f") == 0 || strcmp(cmd, "find")) {
-      editorFind();
-    }else {
-        editorSetStatusMessage("Unknown command: %s", cmd);
+  if (strcmp(cmd, "q") == 0) {
+    if (E.dirty) {
+      editorSetStatusMessage("No write since last change (add ! to override)");
+    } else {
+      write(STDOUT_FILENO, "\x1b[2J", 4);
+      write(STDOUT_FILENO, "\x1b[H", 3);
+      exit(0);
     }
+  } else if (strcmp(cmd, "q!") == 0) {
+    write(STDOUT_FILENO, "\x1b[2J", 4);
+    write(STDOUT_FILENO, "\x1b[H", 3);
+    exit(0);
+  } else if (strcmp(cmd, "w") == 0) {
+    disableRawMode();  
+    editorSave();
+  } else if (strcmp(cmd, "wq") == 0) {
+    editorSave();
+    exit(0);
+  } else if (strcmp(cmd, "f") == 0 || strcmp(cmd, "find")) {
+    editorFind();
+  }else {
+    editorSetStatusMessage("Unknown command: %s", cmd);
+  }
 
-    free(cmd);
+  free(cmd);
 }
 
 void editorProcessInsertMode(int c) {
@@ -286,4 +301,11 @@ void editorProcessInsertMode(int c) {
   }
 
   quit_times = TX_QUIT_TIMES;
+}
+
+void editorJumpToEnd() {
+  if (E.numrows > 0) {
+    E.cy = E.numrows - 1;
+    E.cx = 0;
+  } 
 }
