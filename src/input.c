@@ -218,7 +218,7 @@ void handleCommandMode() {
   } else if (strcmp(cmd, "wq") == 0) {
     editorSave();
     exit(0);
-  } else if (strcmp(cmd, "f") == 0 || strcmp(cmd, "find")) {
+  } else if (strcmp(cmd, "f") == 0 || strcmp(cmd, "find") == 0) {
     editorFind();
   }else {
     editorSetStatusMessage("Unknown command: %s", cmd);
