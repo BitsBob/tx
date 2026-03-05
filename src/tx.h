@@ -2,7 +2,6 @@
 #define TX_H
 #define _POSIX_C_SOURCE 200809L
 
-
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -25,6 +24,12 @@
 #define TX_QUIT_TIMES 3
 
 #define CTRL_KEY(k) ((k) & 0x1f)
+
+enum pendingOperations {
+  OP_NONE = 0,
+  OP_DELETE,
+  OP_YANK, 
+};
 
 enum editorMode {
   MODE_NORMAL,
@@ -101,6 +106,7 @@ void editorPaste();
 void editorSave();
 void editorUpdateRow(erow *row);
 void editorYankSelection();
+void editorDeleteLine();
 
 // output.c
 void editorRefreshScreen();

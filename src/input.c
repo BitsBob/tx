@@ -145,11 +145,19 @@ void editorProcessVisualMode(int c) {
 
 
 void editorProcessNormalMode(int c) {
+  switch (E.pendingOp) {
+    case OP_DELETE:
+      if ( c == 'd' ) {
+        editorDeleteLine();
+      }
+      E.pendingOp = OP_NONE;
+      return;
+  }
+  
   switch (c) {
     case 'i':
       E.mode = MODE_INSERT;
       break;
-
 
     case 'v':
       E.vis_start_cx = E.cx;
@@ -172,6 +180,9 @@ void editorProcessNormalMode(int c) {
       editorFind();
       break;
 
+    case 'd':
+      E.pendingOp = OP_DELETE;
+      break;
 
     case ARROW_UP:
     case ARROW_DOWN:

@@ -4,8 +4,9 @@ char *YANKED_TEXT = NULL;
 size_t YANKED_LEN = 0;
 
 int editorRowRxToCx(erow *row, int rx);
+void editorDelRow(int at);
 
-void editorFindCallback(char *query, int key) {
+  void editorFindCallback(char *query, int key) {
   static int last_match = -1;
   static int direction = 1;
   if (key == '\r' || key == '\x1b') {
@@ -54,6 +55,22 @@ void editorFind() {
     E.coloff = saved_coloff;
     E.rowoff = saved_rowoff;
   }
+}
+
+void editorDeleteLine() {
+  if (E.cy == E.numrows) return;
+  erow *row = &E.row[E.cy];
+  free(YANKED_TEXT);
+  YANKED_TEXT = malloc(row->size + 2);
+  memcpy(YANKED_TEXT, row->chars, row->size);
+  YANKED_TEXT[row->size] = '\n';
+  YANKED_TEXT[row->size + 1] = '\0';
+  YANKED_LEN = row->size + 1;
+
+  editorDelRow(E.cy);
+  
+  if (E.cy == E.numrows && E.cy > 0) E.cy--;
+  editorSetStatusMessage("Deleted 1 line");
 }
 
 void editorOpen(char *filename) {
