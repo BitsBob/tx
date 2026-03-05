@@ -4,6 +4,7 @@ char *YANKED_TEXT = NULL;
 size_t YANKED_LEN = 0;
 
 int editorRowRxToCx(erow *row, int rx);
+void editorRowAppendString(erow *row, char *s, size_t len);
 void editorDelRow(int at);
 
 void editorFindCallback(char *query, int key) {
@@ -71,6 +72,42 @@ void editorDeleteLine() {
   
   if (E.cy == E.numrows && E.cy > 0) E.cy--;
   editorSetStatusMessage("Deleted 1 line");
+}
+
+void editorDeleteSelection() {
+  if (E.mode != MODE_VISUAL) return;
+
+  int start_y = E.vis_start_cy;
+  int end_y = E.cy;
+  int start_x = E.vis_start_cx;
+  int end_x = E.cx;
+
+  if (start_y > end_y || (start_y == end_y && start_x > end_x)) {
+    int tmp_y = start_y; start_y = end_y; end_y = tmp_y;
+    int tmp_x = start_x; start_x = end_x; end_x = tmp_x;
+  }
+
+  editorYankSelection();
+  erow *first_row = &E.row[start_y];
+  erow *last_row = &E.row[end_y];
+
+  char *suffix = &last_row->chars[end_x];
+  int suffix_len = last_row->size - end_x;
+
+  first_row->size = start_x;
+  editorRowAppendString(first_row, suffix, suffix_len);
+
+  int rows_to_delete = end_y - start_y;
+  while (rows_to_delete > 0) {
+    editorDelRow(start_y + 1);
+    rows_to_delete--;
+  }
+
+  E.cx = start_x;
+  E.cy = start_y;
+  E.mode = MODE_NORMAL;
+  E.dirty++;
+  editorSetStatusMessage("Deleted selection");
 }
 
 void editorOpen(char *filename) {

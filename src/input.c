@@ -118,6 +118,11 @@ void editorProcessVisualMode(int c) {
       editorJumpToEnd();
       break;
 
+    case 'd':
+    case 'x':
+      editorDeleteSelection();
+      break;
+
     case ARROW_UP:
     case ARROW_DOWN:
     case ARROW_LEFT:
@@ -177,6 +182,9 @@ void editorProcessNormalMode(int c) {
         editorInsertNewline();
         E.mode = MODE_INSERT;
         E.pendingOp = OP_NONE;
+      } else if ( c == 'w' ) {
+        editorDeleteWord();
+        E.mode = MODE_INSERT;
       }
       break;
   }

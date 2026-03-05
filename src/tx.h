@@ -111,6 +111,7 @@ void editorYankSelection();
 void editorDeleteLine();
 void editorYankLine();
 void editorDeleteWord();
+void editorDeleteSelection();
 
 // output.c
 void editorRefreshScreen();
