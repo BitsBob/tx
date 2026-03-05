@@ -143,16 +143,45 @@ void editorProcessVisualMode(int c) {
   }
 }
 
+void editorJumpToTop() {
+  E.cy = 0;
+  E.cx = 0;
+  E.rowoff = 0;
+}
 
 void editorProcessNormalMode(int c) {
   switch (E.pendingOp) {
     case OP_DELETE:
       if ( c == 'd' ) {
         editorDeleteLine();
+      } else if ( c == 'w' ) {
+        editorDeleteWord();
       }
-      E.pendingOp = OP_NONE;
-      return;
+      break;
+
+    case OP_JUMP_TO_TOP:
+      if ( c == 'g' ) {
+        editorJumpToTop();
+      }
+      break;
+
+    case OP_YANK:
+      if ( c == 'y' ) {
+        editorYankLine();
+      }
+      break;
+
+    case OP_INSERT:
+      if ( c == 'c' ) {
+        editorDeleteLine();
+        editorInsertNewline();
+        E.mode = MODE_INSERT;
+        E.pendingOp = OP_NONE;
+      }
+      break;
   }
+
+  E.pendingOp = OP_NONE;
   
   switch (c) {
     case 'i':
@@ -170,6 +199,11 @@ void editorProcessNormalMode(int c) {
       break;
     
     case 'g':
+      E.pendingOp = OP_JUMP_TO_TOP;
+      break;
+
+    case 'c':
+      E.pendingOp = OP_INSERT;
       break;
 
     case 'G':
@@ -189,6 +223,13 @@ void editorProcessNormalMode(int c) {
     case ARROW_LEFT:
     case ARROW_RIGHT:
       editorMoveCursor(c);
+      break;
+    
+    case '\x1b':
+      if (E.pendingOp != 0) {
+        E.pendingOp = OP_NONE;
+        editorSetStatusMessage("");
+      }
       break;
 
     case 'h':

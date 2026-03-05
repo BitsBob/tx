@@ -29,6 +29,8 @@ enum pendingOperations {
   OP_NONE = 0,
   OP_DELETE,
   OP_YANK, 
+  OP_JUMP_TO_TOP,
+  OP_INSERT,
 };
 
 enum editorMode {
@@ -107,6 +109,8 @@ void editorSave();
 void editorUpdateRow(erow *row);
 void editorYankSelection();
 void editorDeleteLine();
+void editorYankLine();
+void editorDeleteWord();
 
 // output.c
 void editorRefreshScreen();

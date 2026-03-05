@@ -6,7 +6,7 @@ size_t YANKED_LEN = 0;
 int editorRowRxToCx(erow *row, int rx);
 void editorDelRow(int at);
 
-  void editorFindCallback(char *query, int key) {
+void editorFindCallback(char *query, int key) {
   static int last_match = -1;
   static int direction = 1;
   if (key == '\r' || key == '\x1b') {
@@ -287,6 +287,20 @@ char *editorRowsToString(int *buflen) {
   return buf;
 }
 
+void editorYankLine() {
+  if (E.cy >= E.numrows) return;
+  erow *row = &E.row[E.cy];
+
+  free(YANKED_TEXT);
+  YANKED_TEXT = malloc(row->size + 2);
+  memcpy(YANKED_TEXT, row->chars, row->size);
+  YANKED_TEXT[row->size] = '\n';
+  YANKED_TEXT[row->size + 1] = '\0';
+  YANKED_LEN = row->size + 1;
+
+  editorSetStatusMessage("Yanked 1 line");
+}
+
 void editorYankSelection() {
   if (E.mode != MODE_VISUAL) return;
 
@@ -305,7 +319,7 @@ void editorYankSelection() {
     int row_start = (y == start_y) ? start_x : 0;
     int row_end   = (y == end_y) ? end_x : E.row[y].size;
     total_len += row_end - row_start;
-    if (y != end_y) total_len += 1; // newline between rows
+    if (y != end_y) total_len += 1;
   }
 
   free(YANKED_TEXT);
@@ -345,4 +359,34 @@ void editorPaste() {
   }
 
   editorSetStatusMessage("Pasted %zu bytes", YANKED_LEN);
+}
+
+int editorFindWordEnd(erow *row, int start_cx) {
+  int i = start_cx;
+
+  if (i < row->size && isspace(row->chars[i])) {
+    while (i < row->size && isspace(row->chars[i])) i++;
+  }
+  else {
+    while (i < row->size && !isspace(row->chars[i])) i++;
+    while (i < row->size && isspace(row->chars[i])) i++;
+  }
+
+  return i;
+}
+
+void editorDeleteWord() {
+  if (E.cy == E.numrows) return;
+  erow *row = &E.row[E.cy];
+  if (row->size == 0) return;
+
+  int next_word_start = editorFindWordEnd(row, E.cx);
+  int count = next_word_start - E.cx;
+
+  memmove(&row->chars[E.cx], &row->chars[next_word_start], row->size - next_word_start);
+  row->size -= count;
+  row->chars[row->size] = '\0';
+
+  editorUpdateRow(row);
+  E.dirty++;
 }
