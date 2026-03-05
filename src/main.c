@@ -4,22 +4,25 @@
 struct editorConfig E;
 
 void initEditor() {
+  E.coloff = 0;
   E.cx = 0;
   E.cy = 0;
-  E.last_cy = 0;
-  E.last_cy = 0;
-  E.rx = 0;
-  E.rowoff = 0;
-  E.coloff = 0;
-  E.last_rowoff = 0;
+  E.dirty = 0;
+  E.filename = NULL;
   E.last_coloff = 0;
+  E.last_cy = 0;
+  E.last_cy = 0;
+  E.last_rowoff = 0;
+  E.mode = MODE_NORMAL;
   E.numrows = 0;
   E.row = NULL;
-  E.dirty = 0;
-  E.mode = MODE_NORMAL;
-  E.filename = NULL;
+  E.rowoff = 0;
+  E.rx = 0;
   E.statusmsg[0] = '\0';
   E.statusmsg_time = 0;
+  E.vis_start_cx = 0;
+  E.vis_start_cy = 0;
+
 
   if (getWindowSize(&E.screenrows, &E.screencols) == -1)
     die("getWindowSize");

@@ -39,8 +39,13 @@ void editorScroll() {
 }
 
 int isCharSelected(int x, int y) {
+  if (E.mode != MODE_VISUAL || E.numrows == 0 || y >= E.numrows) return 0;
+  
   int start_y = E.vis_start_cy;
   int end_y = E.cy;
+
+  if (start_y >= E.numrows) start_y = E.numrows - 1;
+  if (end_y >= E.numrows) end_y = E.numrows - 1;
 
   int start_x = editorRowCxToRx(&E.row[start_y], E.vis_start_cx);
   int end_x   = E.rx;
