@@ -9,6 +9,12 @@ void die(const char *s) {
 }
 
 void disableRawMode() {
+  write(STDOUT_FILENO, "\x1b[m", 3);
+  write(STDOUT_FILENO, "\x1b[0 q", 5);
+  write(STDOUT_FILENO, "\x1b[?25h", 6);
+  write(STDOUT_FILENO, "\x1b[2J", 4);
+  write(STDOUT_FILENO, "\x1b[H", 3);
+
   if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &E.orig_termios) == -1)
     die("tcsetattr");
 }
