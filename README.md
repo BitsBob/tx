@@ -1,17 +1,26 @@
 # tx
-Small text editor in C.
+Small text editor in C, built off the Kilo text editor tutorial.
 
 # Building Yourself
 ```bash
 git clone https://github.com/BitsBob/tx.git
 cd tx
 make
-make run
+sudo cp build/tx /usr/local/bin/
 ```
+
+| Mode    | Key           | Action                                 |
+|---------|---------------|----------------------------------------|
+| Normal  | i             | enter insert mode                      |
+| Normal  | v             | enter visual mode                      |
+| Normal  | dd            | delete line                            |
+| Normal  | gg / G        | top / bottom                           |
+| Normal  | /             | search                                 |
+| Command | :w :q :wq :q! | write / quit / write+quit / force quit |
 
 # ! TODO
  - [ ] Undo/Redo
- - [ ] Syntax Highlighting
+ - [x] Syntax Highlighting
  - [x] Delete Shortcuts
  - [ ] Line Numbers (Relative, Actual)
  - [ ] Dot Operator
@@ -19,3 +28,6 @@ make run
  - [ ] Visual Mode pipe to shell command
  - [ ] Multi Line insert
  - [x] Text Objects (Sort of)
+
+# License
+MIT

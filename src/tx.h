@@ -19,7 +19,7 @@
 #define _GNU_SOURCE
 
 #define MAX_YANKS 10
-#define TX_VERSION "0.1.0"
+#define TX_VERSION "0.1.1"
 #define TX_TAB_STOP 8
 #define TX_QUIT_TIMES 3
 
