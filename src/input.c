@@ -8,8 +8,10 @@ void handleCommandMode();
 
 int findNextWordBoundary(erow *row, int startCx) {
   int i = startCx;
-  while (i < row->size && !isspace(row->chars[i])) i++;
-  while (i < row->size && isspace(row->chars[i])) i++;
+  while (i < row->size && !isspace(row->chars[i]))
+    i++;
+  while (i < row->size && isspace(row->chars[i]))
+    i++;
   return i;
 }
 
@@ -26,16 +28,19 @@ char *editorPrompt(char *prompt, void (*callback)(char *, int)) {
     int c = editorReadKey();
 
     if (c == DEL_KEY || c == CTRL_KEY('h') || c == BACKSPACE) {
-      if (buflen != 0) buf[--buflen] = '\0';
+      if (buflen != 0)
+        buf[--buflen] = '\0';
     } else if (c == '\x1b') {
       editorSetStatusMessage("");
-      if (callback) callback(buf, c);
+      if (callback)
+        callback(buf, c);
       free(buf);
       return NULL;
     } else if (c == '\r') {
       if (buflen != 0) {
         editorSetStatusMessage("");
-        if (callback) callback(buf, c);
+        if (callback)
+          callback(buf, c);
         return buf;
       }
     } else if (!iscntrl(c) && c < 128) {
@@ -47,7 +52,8 @@ char *editorPrompt(char *prompt, void (*callback)(char *, int)) {
       buf[buflen] = '\0';
     }
 
-    if (callback) callback(buf, c);
+    if (callback)
+      callback(buf, c);
   }
 }
 
@@ -113,7 +119,7 @@ void editorProcessVisualMode(int c) {
     case '\x1b':
       E.mode = MODE_NORMAL;
       break;
-    
+
     case 'G':
       editorJumpToEnd();
       break;
@@ -157,32 +163,32 @@ void editorJumpToTop() {
 void editorProcessNormalMode(int c) {
   switch (E.pendingOp) {
     case OP_DELETE:
-      if ( c == 'd' ) {
+      if (c == 'd') {
         editorDeleteLine();
-      } else if ( c == 'w' ) {
+      } else if (c == 'w') {
         editorDeleteWord();
       }
       break;
 
     case OP_JUMP_TO_TOP:
-      if ( c == 'g' ) {
+      if (c == 'g') {
         editorJumpToTop();
       }
       break;
 
     case OP_YANK:
-      if ( c == 'y' ) {
+      if (c == 'y') {
         editorYankLine();
       }
       break;
 
     case OP_INSERT:
-      if ( c == 'c' ) {
+      if (c == 'c') {
         editorDeleteLine();
         editorInsertNewline();
         E.mode = MODE_INSERT;
         E.pendingOp = OP_NONE;
-      } else if ( c == 'w' ) {
+      } else if (c == 'w') {
         editorDeleteWord();
         E.mode = MODE_INSERT;
       }
@@ -190,7 +196,7 @@ void editorProcessNormalMode(int c) {
   }
 
   E.pendingOp = OP_NONE;
-  
+
   switch (c) {
     case 'i':
       E.mode = MODE_INSERT;
@@ -205,7 +211,7 @@ void editorProcessNormalMode(int c) {
     case ':':
       handleCommandMode();
       break;
-    
+
     case 'g':
       E.pendingOp = OP_JUMP_TO_TOP;
       break;
@@ -232,7 +238,7 @@ void editorProcessNormalMode(int c) {
     case ARROW_RIGHT:
       editorMoveCursor(c);
       break;
-    
+
     case '\x1b':
       if (E.pendingOp != 0) {
         E.pendingOp = OP_NONE;
@@ -259,14 +265,14 @@ void editorProcessNormalMode(int c) {
     case CTRL_KEY('q'):
       exit(0);
       break;
-
   }
 }
 
 void handleCommandMode() {
   char *cmd = editorPrompt(":%s", NULL);
 
-  if (cmd == NULL) return;
+  if (cmd == NULL)
+    return;
 
   if (strcmp(cmd, "q") == 0) {
     if (E.dirty) {
@@ -281,14 +287,14 @@ void handleCommandMode() {
     write(STDOUT_FILENO, "\x1b[H", 3);
     exit(0);
   } else if (strcmp(cmd, "w") == 0) {
-    disableRawMode();  
+    disableRawMode();
     editorSave();
   } else if (strcmp(cmd, "wq") == 0) {
     editorSave();
     exit(0);
   } else if (strcmp(cmd, "f") == 0 || strcmp(cmd, "find") == 0) {
     editorFind();
-  }else {
+  } else {
     editorSetStatusMessage("Unknown command: %s", cmd);
   }
 
@@ -306,8 +312,8 @@ void editorProcessInsertMode(int c) {
     case CTRL_KEY('q'):
       if (E.dirty && quit_times > 0) {
         editorSetStatusMessage("WARNING!!! File has unsaved changes. "
-            "Press Ctrl-Q %d more times to quit.",
-            quit_times);
+                               "Press Ctrl-Q %d more times to quit.",
+                               quit_times);
         quit_times--;
         return;
       }
@@ -337,19 +343,18 @@ void editorProcessInsertMode(int c) {
       break;
 
     case PAGE_UP:
-    case PAGE_DOWN: 
-      {
-        if (c == PAGE_UP) {
-          E.cy = E.rowoff;
-        } else if (c == PAGE_DOWN) {
-          E.cy = E.rowoff + E.screenrows - 1;
-          if (E.cy > E.numrows)
-            E.cy = E.numrows;
-        }
-        int times = E.screenrows;
-        while (times--)
-          editorMoveCursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
-      } break;
+    case PAGE_DOWN: {
+      if (c == PAGE_UP) {
+        E.cy = E.rowoff;
+      } else if (c == PAGE_DOWN) {
+        E.cy = E.rowoff + E.screenrows - 1;
+        if (E.cy > E.numrows)
+          E.cy = E.numrows;
+      }
+      int times = E.screenrows;
+      while (times--)
+        editorMoveCursor(c == PAGE_UP ? ARROW_UP : ARROW_DOWN);
+    } break;
 
     case ARROW_UP:
     case ARROW_DOWN:
@@ -375,5 +380,5 @@ void editorJumpToEnd() {
   if (E.numrows > 0) {
     E.cy = E.numrows - 1;
     E.cx = 0;
-  } 
+  }
 }

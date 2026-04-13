@@ -22,12 +22,15 @@ void editorFindCallback(char *query, int key) {
     last_match = -1;
     direction = 1;
   }
-  if (last_match == -1) direction = 1;
+  if (last_match == -1)
+    direction = 1;
   int current = last_match;
   for (int i = 0; i < E.numrows; i++) {
     current += direction;
-    if (current == -1) current = E.numrows - 1;
-    else if (current == E.numrows) current = 0;
+    if (current == -1)
+      current = E.numrows - 1;
+    else if (current == E.numrows)
+      current = 0;
     erow *row = &E.row[current];
     char *match = strstr(row->render, query);
     if (match) {
@@ -39,7 +42,6 @@ void editorFindCallback(char *query, int key) {
     }
   }
 }
-
 
 void editorFind() {
   int saved_cx = E.cx;
@@ -59,7 +61,8 @@ void editorFind() {
 }
 
 void editorDeleteLine() {
-  if (E.cy == E.numrows) return;
+  if (E.cy == E.numrows)
+    return;
   erow *row = &E.row[E.cy];
   free(YANKED_TEXT);
   YANKED_TEXT = malloc(row->size + 2);
@@ -69,13 +72,15 @@ void editorDeleteLine() {
   YANKED_LEN = row->size + 1;
 
   editorDelRow(E.cy);
-  
-  if (E.cy == E.numrows && E.cy > 0) E.cy--;
+
+  if (E.cy == E.numrows && E.cy > 0)
+    E.cy--;
   editorSetStatusMessage("Deleted 1 line");
 }
 
 void editorDeleteSelection() {
-  if (E.mode != MODE_VISUAL) return;
+  if (E.mode != MODE_VISUAL)
+    return;
 
   int start_y = E.vis_start_cy;
   int end_y = E.cy;
@@ -83,8 +88,12 @@ void editorDeleteSelection() {
   int end_x = E.cx;
 
   if (start_y > end_y || (start_y == end_y && start_x > end_x)) {
-    int tmp_y = start_y; start_y = end_y; end_y = tmp_y;
-    int tmp_x = start_x; start_x = end_x; end_x = tmp_x;
+    int tmp_y = start_y;
+    start_y = end_y;
+    end_y = tmp_y;
+    int tmp_x = start_x;
+    start_x = end_x;
+    end_x = tmp_x;
   }
 
   editorYankSelection();
@@ -174,7 +183,8 @@ int editorRowRxToCx(erow *row, int rx) {
     if (row->chars[cx] == '\t')
       cur_rx += (TX_TAB_STOP - 1) - (cur_rx % TX_TAB_STOP);
     cur_rx++;
-    if (cur_rx > rx) return cx;
+    if (cur_rx > rx)
+      return cx;
   }
   return cx;
 }
@@ -203,7 +213,8 @@ void editorUpdateRow(erow *row) {
 }
 
 void editorInsertRow(int at, char *s, size_t len) {
-  if (at < 0 || at > E.numrows) return;
+  if (at < 0 || at > E.numrows)
+    return;
 
   E.row = realloc(E.row, sizeof(erow) * (E.numrows + 1));
 
@@ -325,7 +336,8 @@ char *editorRowsToString(int *buflen) {
 }
 
 void editorYankLine() {
-  if (E.cy >= E.numrows) return;
+  if (E.cy >= E.numrows)
+    return;
   erow *row = &E.row[E.cy];
 
   free(YANKED_TEXT);
@@ -339,24 +351,30 @@ void editorYankLine() {
 }
 
 void editorYankSelection() {
-  if (E.mode != MODE_VISUAL) return;
+  if (E.mode != MODE_VISUAL)
+    return;
 
   int start_y = E.vis_start_cy;
-  int end_y   = E.cy;
+  int end_y = E.cy;
   int start_x = E.vis_start_cx;
-  int end_x   = E.cx;
+  int end_x = E.cx;
 
   if (start_y > end_y || (start_y == end_y && start_x > end_x)) {
-    int tmp_y = start_y; start_y = end_y; end_y = tmp_y;
-    int tmp_x = start_x; start_x = end_x; end_x = tmp_x;
+    int tmp_y = start_y;
+    start_y = end_y;
+    end_y = tmp_y;
+    int tmp_x = start_x;
+    start_x = end_x;
+    end_x = tmp_x;
   }
 
   size_t total_len = 0;
   for (int y = start_y; y <= end_y; y++) {
     int row_start = (y == start_y) ? start_x : 0;
-    int row_end   = (y == end_y) ? end_x : E.row[y].size;
+    int row_end = (y == end_y) ? end_x : E.row[y].size;
     total_len += row_end - row_start;
-    if (y != end_y) total_len += 1;
+    if (y != end_y)
+      total_len += 1;
   }
 
   free(YANKED_TEXT);
@@ -366,7 +384,7 @@ void editorYankSelection() {
   size_t idx = 0;
   for (int y = start_y; y <= end_y; y++) {
     int row_start = (y == start_y) ? start_x : 0;
-    int row_end   = (y == end_y) ? end_x : E.row[y].size;
+    int row_end = (y == end_y) ? end_x : E.row[y].size;
 
     for (int x = row_start; x < row_end; x++) {
       YANKED_TEXT[idx++] = E.row[y].chars[x];
@@ -384,7 +402,8 @@ void editorYankSelection() {
 }
 
 void editorPaste() {
-  if (!YANKED_TEXT || YANKED_LEN == 0) return;
+  if (!YANKED_TEXT || YANKED_LEN == 0)
+    return;
 
   for (size_t i = 0; i < YANKED_LEN; i++) {
     char c = YANKED_TEXT[i];
@@ -402,25 +421,30 @@ int editorFindWordEnd(erow *row, int start_cx) {
   int i = start_cx;
 
   if (i < row->size && isspace(row->chars[i])) {
-    while (i < row->size && isspace(row->chars[i])) i++;
-  }
-  else {
-    while (i < row->size && !isspace(row->chars[i])) i++;
-    while (i < row->size && isspace(row->chars[i])) i++;
+    while (i < row->size && isspace(row->chars[i]))
+      i++;
+  } else {
+    while (i < row->size && !isspace(row->chars[i]))
+      i++;
+    while (i < row->size && isspace(row->chars[i]))
+      i++;
   }
 
   return i;
 }
 
 void editorDeleteWord() {
-  if (E.cy == E.numrows) return;
+  if (E.cy == E.numrows)
+    return;
   erow *row = &E.row[E.cy];
-  if (row->size == 0) return;
+  if (row->size == 0)
+    return;
 
   int next_word_start = editorFindWordEnd(row, E.cx);
   int count = next_word_start - E.cx;
 
-  memmove(&row->chars[E.cx], &row->chars[next_word_start], row->size - next_word_start);
+  memmove(&row->chars[E.cx], &row->chars[next_word_start],
+          row->size - next_word_start);
   row->size -= count;
   row->chars[row->size] = '\0';
 
