@@ -11,6 +11,7 @@ make run
 
 # ! TODO
  - [ ] Undo/Redo
+ - [ ] Syntax Highlighting
  - [x] Delete Shortcuts
  - [ ] Line Numbers (Relative, Actual)
  - [ ] Dot Operator
