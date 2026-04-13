@@ -9,7 +9,7 @@ void initEditor() {
   E.dirty = 0;
   E.filename = NULL;
   E.last_coloff = 0;
-  E.last_cy = 0;
+  E.last_cx = 0;
   E.last_cy = 0;
   E.last_rowoff = 0;
   E.mode = MODE_NORMAL;
@@ -21,7 +21,7 @@ void initEditor() {
   E.statusmsg_time = 0;
   E.vis_start_cx = 0;
   E.vis_start_cy = 0;
-
+  E.syntax = NULL;
 
   if (getWindowSize(&E.screenrows, &E.screencols) == -1)
     die("getWindowSize");

@@ -92,22 +92,38 @@ void editorDrawRows(struct abuf *ab) {
       if (len < 0) len = 0;
       if (len > E.screencols) len = E.screencols;
 
-      char *render = &E.row[filerow].render[E.coloff];
+      char *render = (len > 0) ? &E.row[filerow].render[E.coloff] : NULL;
+      unsigned char *hl = (len > 0) ? &E.row[filerow].hl[E.coloff] : NULL;
       int in_selection = 0;
+      int current_color = -1;
 
-      for (int j=0; j<len; j++) {
+      for (int j = 0; j < len; j++) {
         int selected = (E.mode == MODE_VISUAL && isCharSelected(j + E.coloff, filerow));
 
         if (selected && !in_selection) {
-            abAppend(ab, "\x1b[7m", 4);
-            in_selection = 1;
+          abAppend(ab, "\x1b[7m", 4);
+          in_selection = 1;
         } else if (!selected && in_selection) {
-            abAppend(ab, "\x1b[m", 3);
-            in_selection = 0;
+          abAppend(ab, "\x1b[27m", 5);
+          in_selection = 0;
         }
+
+        int color = (hl[j] == HL_NORMAL) ? -1 : editorSyntaxToColor(hl[j]);
+        if (color != current_color) {
+          current_color = color;
+          if (color == -1) {
+            abAppend(ab, "\x1b[39m", 5);
+          } else {
+            char buf[16];
+            int clen = snprintf(buf, sizeof(buf), "\x1b[%dm", color);
+            abAppend(ab, buf, clen);
+          }
+        }
+
         abAppend(ab, &render[j], 1);
       }
 
+      abAppend(ab, "\x1b[39m", 5);
       if (in_selection) abAppend(ab, "\x1b[m", 3);
     }
 
@@ -139,7 +155,9 @@ void editorDrawStatusBar(struct abuf *ab) {
                      E.filename ? E.filename : "[No Name]", E.numrows,
                      E.dirty ? "(modified)" : "");
 
-  int rlen = snprintf(rstatus, sizeof(rstatus), " %d/%d ", E.cy + 1, E.numrows);
+  int rlen = snprintf(rstatus, sizeof(rstatus), " %s | %d/%d ",
+                      E.syntax ? E.syntax->filetype : "no ft",
+                      E.cy + 1, E.numrows);
   
   if (modelen > E.screencols) modelen = E.screencols;
 

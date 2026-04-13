@@ -53,14 +53,41 @@ enum editorKey {
   PAGE_DOWN,
 };
 
+enum editorHighlight {
+  HL_NORMAL = 0,
+  HL_COMMENT,
+  HL_MLCOMMENT,
+  HL_KEYWORD1,
+  HL_KEYWORD2,
+  HL_STRING,
+  HL_NUMBER,
+  HL_MATCH,
+};
+
+#define HL_HIGHLIGHT_NUMBERS (1 << 0)
+#define HL_HIGHLIGHT_STRINGS (1 << 1)
+
+struct editorSyntax {
+  char *filetype;
+  char **filematch;
+  char **keywords;
+  char *singleline_comment_start;
+  char *multiline_comment_start;
+  char *multiline_comment_end;
+  int flags;
+};
+
 extern char *YANKED_TEXT;
 extern size_t YANKED_LEN;
 
 typedef struct erow {
+  int idx;
   int size;
   int rsize;
   char *chars;
   char *render;
+  unsigned char *hl;
+  int hl_open_comment;
 } erow;
 
 struct editorConfig {
@@ -82,6 +109,7 @@ struct editorConfig {
   int screencols;
   int screenrows;
   int vis_start_cx, vis_start_cy;
+  struct editorSyntax *syntax;
   struct termios orig_termios;
   time_t statusmsg_time;
 };
@@ -112,6 +140,9 @@ void editorDeleteLine();
 void editorYankLine();
 void editorDeleteWord();
 void editorDeleteSelection();
+void editorUpdateSyntax(erow *row);
+void editorSelectSyntaxHighlight();
+int editorSyntaxToColor(int hl);
 
 // output.c
 void editorRefreshScreen();
