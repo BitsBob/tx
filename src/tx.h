@@ -19,7 +19,7 @@
 #define _GNU_SOURCE
 
 #define MAX_YANKS 10
-#define TX_VERSION "0.0.1"
+#define TX_VERSION "0.1.0"
 #define TX_TAB_STOP 8
 #define TX_QUIT_TIMES 3
 
@@ -28,7 +28,7 @@
 enum pendingOperations {
   OP_NONE = 0,
   OP_DELETE,
-  OP_YANK, 
+  OP_YANK,
   OP_JUMP_TO_TOP,
   OP_INSERT,
 };
