@@ -204,7 +204,7 @@ void editorRefreshScreen() {
   editorDrawMessageBar(&ab);
 
   if (E.mode == MODE_INSERT) {
-    abAppend(&ab, "\x1b[6 q", 5);
+    abAppend(&ab, "\x1b[5 q", 5);
   } else {
     abAppend(&ab, "\x1b[2 q", 5);
   }
