@@ -208,12 +208,12 @@ void editorProcessNormalMode(int c) {
       E.pendingOp = OP_JUMP_TO_TOP;
       break;
 
-    case 'c':
-      E.pendingOp = OP_INSERT;
-      break;
-
     case 'G':
       editorJumpToEnd();
+      break;
+
+    case 'c':
+      E.pendingOp = OP_INSERT;
       break;
 
     case '/':

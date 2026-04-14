@@ -343,6 +343,7 @@ void editorSave() {
     }
     editorSelectSyntaxHighlight();
   }
+  
   int len;
   char *buf = editorRowsToString(&len);
   int fd = open(E.filename, O_RDWR | O_CREAT, 0644);
