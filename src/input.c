@@ -253,6 +253,9 @@ void editorProcessNormalMode(int c) {
     case 'p':
       editorPaste();
       break;
+    case 'x':
+      editorDelCharUnderCursor();
+      break;
 
     case CTRL_KEY('q'):
       exit(0);

@@ -127,6 +127,7 @@ void enableRawMode();
 char *editorRowsToString(int *buflen);
 int editorRowCxToRx(erow *row, int rx);
 void editorDelChar();
+void editorDelCharUnderCursor();
 void editorFind();
 void editorInsertChar(int c);
 void editorInsertNewline();

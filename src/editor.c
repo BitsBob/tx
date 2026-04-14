@@ -5,6 +5,7 @@ size_t YANKED_LEN = 0;
 
 int editorRowRxToCx(erow *row, int rx);
 void editorRowAppendString(erow *row, char *s, size_t len);
+void editorRowInsertChar(erow *row, int at, int c);
 void editorDelRow(int at);
 
 char *C_HL_extensions[] = {".c", ".h", ".cpp", NULL};
@@ -442,6 +443,47 @@ void editorInsertRow(int at, char *s, size_t len) {
 }
 
 void editorInsertNewline() {
+  char *indent = NULL;
+  int indent_len = 0;
+  int add_extra = 0;
+  int split_brace = 0;
+  char indent_ch = ' ';
+  int extra_count = 2;
+
+  if (E.cy < E.numrows) {
+    erow *row = &E.row[E.cy];
+    while (indent_len < row->size && indent_len < E.cx &&
+           (row->chars[indent_len] == ' ' || row->chars[indent_len] == '\t')) {
+      indent_len++;
+    }
+    if (indent_len > 0) {
+      indent = malloc(indent_len);
+      memcpy(indent, row->chars, indent_len);
+      for (int i = 0; i < indent_len; i++) {
+        if (indent[i] == '\t') {
+          indent_ch = '\t';
+          extra_count = 1;
+          break;
+        }
+      }
+    }
+
+    if (E.cx > 0 && E.cx <= row->size) {
+      char prev = row->chars[E.cx - 1];
+      if (prev == '{' || prev == '(' || prev == '[') {
+        add_extra = 1;
+        if (E.cx < row->size) {
+          char next = row->chars[E.cx];
+          if ((prev == '{' && next == '}') ||
+              (prev == '(' && next == ')') ||
+              (prev == '[' && next == ']')) {
+            split_brace = 1;
+          }
+        }
+      }
+    }
+  }
+
   if (E.cx == 0) {
     editorInsertRow(E.cy, "", 0);
   } else {
@@ -454,6 +496,41 @@ void editorInsertNewline() {
   }
   E.cy++;
   E.cx = 0;
+
+  if (indent_len > 0 || add_extra) {
+    erow *new_row = &E.row[E.cy];
+    for (int i = 0; i < indent_len; i++) {
+      editorRowInsertChar(new_row, E.cx++, indent[i]);
+    }
+    if (add_extra) {
+      for (int i = 0; i < extra_count; i++) {
+        editorRowInsertChar(new_row, E.cx++, indent_ch);
+      }
+    }
+  }
+
+  if (split_brace) {
+    int cursor_cx = E.cx;
+    int cursor_cy = E.cy;
+    erow *new_row = &E.row[E.cy];
+    int tail_start = E.cx;
+    int tail_len = new_row->size - tail_start;
+    editorInsertRow(E.cy + 1, &new_row->chars[tail_start], tail_len);
+    new_row = &E.row[E.cy];
+    new_row->size = tail_start;
+    new_row->chars[new_row->size] = '\0';
+    editorUpdateRow(new_row);
+
+    erow *close_row = &E.row[E.cy + 1];
+    for (int i = 0; i < indent_len; i++) {
+      editorRowInsertChar(close_row, i, indent[i]);
+    }
+
+    E.cx = cursor_cx;
+    E.cy = cursor_cy;
+  }
+
+  free(indent);
 }
 
 void editorFreeRow(erow *row) {
@@ -525,6 +602,17 @@ void editorDelChar() {
     editorDelRow(E.cy);
     E.cy--;
   }
+}
+
+void editorDelCharUnderCursor() {
+  if (E.cy >= E.numrows)
+    return;
+  erow *row = &E.row[E.cy];
+  if (E.cx >= row->size)
+    return;
+  editorRowDelChar(row, E.cx);
+  if (E.cx > 0 && E.cx >= row->size)
+    E.cx = row->size - 1;
 }
 
 char *editorRowsToString(int *buflen) {
