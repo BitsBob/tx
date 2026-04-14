@@ -360,6 +360,36 @@ void editorProcessInsertMode(int c) {
       E.mode = MODE_NORMAL;
       break;
 
+    case '{':
+      editorInsertChar(c);
+      editorInsertChar('}');
+      editorMoveCursor(ARROW_LEFT);
+      break;
+
+    case '(':
+      editorInsertChar(c);
+      editorInsertChar(')');
+      editorMoveCursor(ARROW_LEFT);
+      break;
+    
+    case '[':
+      editorInsertChar(c);
+      editorInsertChar(']');
+      editorMoveCursor(ARROW_LEFT);
+      break;
+
+    case '\"':
+      editorInsertChar(c);
+      editorInsertChar('\"');
+      editorMoveCursor(ARROW_LEFT);
+      break;
+      
+    case '\'':
+      editorInsertChar(c);
+      editorInsertChar('\'');
+      editorMoveCursor(ARROW_LEFT);
+      break;
+      
     default:
       editorInsertChar(c);
       break;
