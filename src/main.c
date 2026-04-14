@@ -1,28 +1,8 @@
 #include "tx.h"
 
-struct editorConfig E;
+struct editorConfig E = {};
 
 void initEditor() {
-  E.coloff = 0;
-  E.cx = 0;
-  E.cy = 0;
-  E.dirty = 0;
-  E.filename = NULL;
-  E.last_coloff = 0;
-  E.last_cx = 0;
-  E.last_cy = 0;
-  E.last_rowoff = 0;
-  E.mode = MODE_NORMAL;
-  E.numrows = 0;
-  E.row = NULL;
-  E.rowoff = 0;
-  E.rx = 0;
-  E.statusmsg[0] = '\0';
-  E.statusmsg_time = 0;
-  E.vis_start_cx = 0;
-  E.vis_start_cy = 0;
-  E.syntax = NULL;
-
   if (getWindowSize(&E.screenrows, &E.screencols) == -1)
     die("getWindowSize");
   E.screenrows -= 2;
