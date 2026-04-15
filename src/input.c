@@ -56,7 +56,6 @@ char *editorPrompt(char *prompt, void (*callback)(char *, int)) {
       callback(buf, c);
   }
 }
-
 void editorMoveCursor(int key) {
   erow *row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
   switch (key) {
@@ -289,7 +288,10 @@ void handleCommandMode() {
     exit(0);
   } else if (strcmp(cmd, "f") == 0 || strcmp(cmd, "find") == 0) {
     editorFind();
-  } else {
+  } else if(strcmp(cmd,"open") == 0) {
+    editorOpenFile();
+  }
+  else {
     editorSetStatusMessage("Unknown command: %s", cmd);
   }
 
