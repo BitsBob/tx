@@ -133,6 +133,7 @@ void editorInsertChar(int c);
 void editorInsertNewline();
 void editorInsertRow(int at, char *s, size_t len);
 void editorOpen(char *filename);
+void editorOpenFile();
 void editorPaste();
 void editorSave();
 void editorUpdateRow(erow *row);
