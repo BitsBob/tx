@@ -334,7 +334,16 @@ void editorOpen(char *filename) {
   fclose(fp);
   E.dirty = 0;
 }
-
+void editorOpenFile() {
+  char* filename = editorPrompt("Enter file name: %s",NULL);
+  if(filename == NULL ||
+     access(filename,F_OK) != 0)
+    {
+      editorSetStatusMessage("Failed to open file!");
+      return;
+    }
+  editorOpen(filename);
+}
 void editorSave() {
   if (E.filename == NULL) {
     E.filename = editorPrompt("Write buffer as: %s", NULL);
