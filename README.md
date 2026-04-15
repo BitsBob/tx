@@ -17,6 +17,7 @@ sudo cp build/tx /usr/local/bin/
 | Normal  | gg / G        | top / bottom                           |
 | Normal  | /             | search                                 |
 | Command | :w :q :wq :q! | write / quit / write+quit / force quit |
+| Command | :open         | open file                              |
 
 # ! TODO
  - [ ] Undo/Redo
