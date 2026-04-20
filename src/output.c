@@ -3,17 +3,23 @@
 struct abuf {
   char *b;
   int len;
+  int cap;
 };
 
-#define ABUF_INIT {NULL, 0}
+#define ABUF_INIT {NULL, 0, 0}
 
 void abAppend(struct abuf *ab, const char *s, int len) {
-  char *new = realloc(ab->b, ab->len + len);
-
-  if (new == NULL)
-    return;
-  memcpy(&new[ab->len], s, len);
-  ab->b = new;
+  if (ab->len + len > ab->cap) {
+    int new_cap = ab->cap ? ab->cap * 2 : 256;
+    while (new_cap < ab->len + len)
+      new_cap *= 2;
+    char *new = realloc(ab->b, new_cap);
+    if (new == NULL)
+      return;
+    ab->b = new;
+    ab->cap = new_cap;
+  }
+  memcpy(&ab->b[ab->len], s, len);
   ab->len += len;
 }
 
@@ -97,8 +103,10 @@ void editorDrawRows(struct abuf *ab) {
       int in_selection = 0;
       int current_color = -1;
 
-      for (int j = 0; j < len; j++) {
+      int j = 0;
+      while (j < len) {
         int selected = (E.mode == MODE_VISUAL && isCharSelected(j + E.coloff, filerow));
+        int color = (hl[j] == HL_NORMAL) ? -1 : editorSyntaxToColor(hl[j]);
 
         if (selected && !in_selection) {
           abAppend(ab, "\x1b[7m", 4);
@@ -108,7 +116,6 @@ void editorDrawRows(struct abuf *ab) {
           in_selection = 0;
         }
 
-        int color = (hl[j] == HL_NORMAL) ? -1 : editorSyntaxToColor(hl[j]);
         if (color != current_color) {
           current_color = color;
           if (color == -1) {
@@ -120,7 +127,16 @@ void editorDrawRows(struct abuf *ab) {
           }
         }
 
-        abAppend(ab, &render[j], 1);
+        int run_start = j;
+        j++;
+        while (j < len) {
+          int next_selected = (E.mode == MODE_VISUAL && isCharSelected(j + E.coloff, filerow));
+          int next_color = (hl[j] == HL_NORMAL) ? -1 : editorSyntaxToColor(hl[j]);
+          if (next_selected != selected || next_color != color)
+            break;
+          j++;
+        }
+        abAppend(ab, &render[run_start], j - run_start);
       }
 
       abAppend(ab, "\x1b[39m", 5);
