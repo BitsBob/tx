@@ -22,6 +22,7 @@
 #define TX_VERSION "0.1.1"
 #define TX_TAB_STOP 8
 #define TX_QUIT_TIMES 3
+#define TX_UNDO_MAX 200
 
 #define CTRL_KEY(k) ((k) & 0x1f)
 
@@ -128,6 +129,7 @@ char *editorRowsToString(int *buflen);
 int editorRowCxToRx(erow *row, int rx);
 void editorDelChar();
 void editorDelCharUnderCursor();
+void editorDelRow(int at);
 void editorFind();
 void editorInsertChar(int c);
 void editorInsertNewline();
@@ -153,6 +155,12 @@ void editorSetFortuneStatusMessage();
 // input.c
 void editorProcessKeypress();
 char *editorPrompt(char *prompt, void (*callback)(char *, int));
+
+// undo.c
+void undoBegin(int top, int count);
+void undoCommit(void);
+void undoUndo(void);
+void undoRedo(void);
 
 #endif
 

@@ -105,9 +105,13 @@ void editorProcessVisualMode(int c) {
     case 'y':
       editorYankSelection();
       break;
-    case 'p':
+    case 'p': {
+      int top = E.cy;
+      int count = (E.cy < E.numrows) ? 1 : 0;
+      undoBegin(top, count);
       editorPaste();
-      break;
+      undoCommit();
+    } break;
     case '\x1b':
       E.mode = MODE_NORMAL;
       break;
@@ -117,9 +121,17 @@ void editorProcessVisualMode(int c) {
       break;
 
     case 'd':
-    case 'x':
+    case 'x': {
+      int sy = E.vis_start_cy, ey = E.cy;
+      if (sy > ey) { int t = sy; sy = ey; ey = t; }
+      int top = sy;
+      int count = ey - sy + 1;
+      if (top + count > E.numrows) count = E.numrows - top;
+      if (count < 0) count = 0;
+      undoBegin(top, count);
       editorDeleteSelection();
-      break;
+      undoCommit();
+    } break;
 
     case ARROW_UP:
     case ARROW_DOWN:
@@ -156,9 +168,13 @@ void editorProcessNormalMode(int c) {
   switch (E.pendingOp) {
     case OP_DELETE:
       if (c == 'd') {
+        undoBegin(E.cy, 1);
         editorDeleteLine();
+        undoCommit();
       } else if (c == 'w') {
+        undoBegin(E.cy, 1);
         editorDeleteWord();
+        undoCommit();
       }
       break;
 
@@ -176,12 +192,16 @@ void editorProcessNormalMode(int c) {
 
     case OP_INSERT:
       if (c == 'c') {
+        undoBegin(E.cy, 1);
         editorDeleteLine();
         editorInsertNewline();
+        undoCommit();
         E.mode = MODE_INSERT;
         E.pendingOp = OP_NONE;
       } else if (c == 'w') {
+        undoBegin(E.cy, 1);
         editorDeleteWord();
+        undoCommit();
         E.mode = MODE_INSERT;
       }
       break;
@@ -250,11 +270,26 @@ void editorProcessNormalMode(int c) {
     case 'l':
       editorMoveCursor(ARROW_RIGHT);
       break;
-    case 'p':
+    case 'p': {
+      int top = E.cy;
+      int count = (E.cy < E.numrows) ? 1 : 0;
+      undoBegin(top, count);
       editorPaste();
-      break;
+      undoCommit();
+    } break;
     case 'x':
-      editorDelCharUnderCursor();
+      if (E.cy < E.numrows) {
+        undoBegin(E.cy, 1);
+        editorDelCharUnderCursor();
+        undoCommit();
+      }
+      break;
+
+    case 'u':
+      undoUndo();
+      break;
+    case CTRL_KEY('r'):
+      undoRedo();
       break;
 
     case CTRL_KEY('q'):
@@ -300,9 +335,12 @@ void editorProcessInsertMode(int c) {
   static int quit_times = TX_QUIT_TIMES;
 
   switch (c) {
-    case '\r':
+    case '\r': {
+      int count = (E.cy < E.numrows) ? 1 : 0;
+      undoBegin(E.cy, count);
       editorInsertNewline();
-      break;
+      undoCommit();
+    } break;
 
     case CTRL_KEY('q'):
       if (E.dirty && quit_times > 0) {
@@ -331,11 +369,17 @@ void editorProcessInsertMode(int c) {
 
     case BACKSPACE:
     case CTRL_KEY('h'):
-    case DEL_KEY:
+    case DEL_KEY: {
+      int top = (c == DEL_KEY) ? E.cy : (E.cy > 0 ? E.cy - 1 : 0);
+      int count = E.numrows - top;
+      if (count > 2) count = 2;
+      if (count < 0) count = 0;
+      undoBegin(top, count);
       if (c == DEL_KEY)
         editorMoveCursor(ARROW_RIGHT);
       editorDelChar();
-      break;
+      undoCommit();
+    } break;
 
     case PAGE_UP:
     case PAGE_DOWN: {
@@ -364,38 +408,27 @@ void editorProcessInsertMode(int c) {
       break;
 
     case '{':
-      editorInsertChar(c);
-      editorInsertChar('}');
-      editorMoveCursor(ARROW_LEFT);
-      break;
-
     case '(':
-      editorInsertChar(c);
-      editorInsertChar(')');
-      editorMoveCursor(ARROW_LEFT);
-      break;
-    
     case '[':
-      editorInsertChar(c);
-      editorInsertChar(']');
-      editorMoveCursor(ARROW_LEFT);
-      break;
-
     case '\"':
+    case '\'': {
+      char close = (c == '{') ? '}' :
+                   (c == '(') ? ')' :
+                   (c == '[') ? ']' : c;
+      int count = (E.cy < E.numrows) ? 1 : 0;
+      undoBegin(E.cy, count);
       editorInsertChar(c);
-      editorInsertChar('\"');
+      editorInsertChar(close);
       editorMoveCursor(ARROW_LEFT);
-      break;
-      
-    case '\'':
+      undoCommit();
+    } break;
+
+    default: {
+      int count = (E.cy < E.numrows) ? 1 : 0;
+      undoBegin(E.cy, count);
       editorInsertChar(c);
-      editorInsertChar('\'');
-      editorMoveCursor(ARROW_LEFT);
-      break;
-      
-    default:
-      editorInsertChar(c);
-      break;
+      undoCommit();
+    } break;
   }
 
   quit_times = TX_QUIT_TIMES;
