@@ -136,13 +136,12 @@ void editorInsertNewline();
 void editorInsertRow(int at, char *s, size_t len);
 void editorOpen(char *filename);
 void editorPaste();
+void editorRowAppendString(erow *row, char *s, size_t len);
 void editorSave();
 void editorUpdateRow(erow *row);
-void editorYankSelection();
 void editorDeleteLine();
 void editorYankLine();
 void editorDeleteWord();
-void editorDeleteSelection();
 void editorUpdateSyntax(erow *row);
 void editorSelectSyntaxHighlight();
 int editorSyntaxToColor(int hl);
@@ -154,7 +153,20 @@ void editorSetFortuneStatusMessage();
 
 // input.c
 void editorProcessKeypress();
+void editorProcessNormalMode(int c);
+void editorProcessInsertMode(int c);
+void editorMoveCursor(int key);
+void editorJumpToTop();
+void editorJumpToEnd();
 char *editorPrompt(char *prompt, void (*callback)(char *, int));
+
+// visual.c
+void editorProcessVisualMode(int c);
+void editorYankSelection();
+void editorDeleteSelection();
+
+// command.c
+void editorProcessCommandMode();
 
 // undo.c
 void undoBegin(int top, int count);

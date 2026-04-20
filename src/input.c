@@ -1,20 +1,5 @@
 #include "tx.h"
 
-void editorProcessInsertMode(int c);
-void editorProcessNormalMode(int c);
-void editorProcessVisualMode(int c);
-void editorJumpToEnd();
-void handleCommandMode();
-
-int findNextWordBoundary(erow *row, int startCx) {
-  int i = startCx;
-  while (i < row->size && !isspace(row->chars[i]))
-    i++;
-  while (i < row->size && isspace(row->chars[i]))
-    i++;
-  return i;
-}
-
 char *editorPrompt(char *prompt, void (*callback)(char *, int)) {
   size_t bufsize = 128;
   char *buf = malloc(bufsize);
@@ -85,83 +70,17 @@ void editorMoveCursor(int key) {
   }
 }
 
-void editorProcessKeypress() {
-  int c = editorReadKey();
-
-  switch (E.mode) {
-    case MODE_NORMAL:
-      editorProcessNormalMode(c);
-      break;
-    case MODE_INSERT:
-      editorProcessInsertMode(c);
-      break;
-    case MODE_VISUAL:
-      editorProcessVisualMode(c);
-  }
-}
-
-void editorProcessVisualMode(int c) {
-  switch (c) {
-    case 'y':
-      editorYankSelection();
-      break;
-    case 'p': {
-      int top = E.cy;
-      int count = (E.cy < E.numrows) ? 1 : 0;
-      undoBegin(top, count);
-      editorPaste();
-      undoCommit();
-    } break;
-    case '\x1b':
-      E.mode = MODE_NORMAL;
-      break;
-
-    case 'G':
-      editorJumpToEnd();
-      break;
-
-    case 'd':
-    case 'x': {
-      int sy = E.vis_start_cy, ey = E.cy;
-      if (sy > ey) { int t = sy; sy = ey; ey = t; }
-      int top = sy;
-      int count = ey - sy + 1;
-      if (top + count > E.numrows) count = E.numrows - top;
-      if (count < 0) count = 0;
-      undoBegin(top, count);
-      editorDeleteSelection();
-      undoCommit();
-    } break;
-
-    case ARROW_UP:
-    case ARROW_DOWN:
-    case ARROW_LEFT:
-    case ARROW_RIGHT:
-      editorMoveCursor(c);
-      break;
-
-    case 'h':
-      editorMoveCursor(ARROW_LEFT);
-      break;
-    case 'j':
-      editorMoveCursor(ARROW_DOWN);
-      break;
-    case 'k':
-      editorMoveCursor(ARROW_UP);
-      break;
-    case 'l':
-      editorMoveCursor(ARROW_RIGHT);
-      break;
-
-    default:
-      break;
-  }
-}
-
 void editorJumpToTop() {
   E.cy = 0;
   E.cx = 0;
   E.rowoff = 0;
+}
+
+void editorJumpToEnd() {
+  if (E.numrows > 0) {
+    E.cy = E.numrows - 1;
+    E.cx = 0;
+  }
 }
 
 void editorProcessNormalMode(int c) {
@@ -221,7 +140,7 @@ void editorProcessNormalMode(int c) {
       break;
 
     case ':':
-      handleCommandMode();
+      editorProcessCommandMode();
       break;
 
     case 'g':
@@ -258,18 +177,11 @@ void editorProcessNormalMode(int c) {
       }
       break;
 
-    case 'h':
-      editorMoveCursor(ARROW_LEFT);
-      break;
-    case 'j':
-      editorMoveCursor(ARROW_DOWN);
-      break;
-    case 'k':
-      editorMoveCursor(ARROW_UP);
-      break;
-    case 'l':
-      editorMoveCursor(ARROW_RIGHT);
-      break;
+    case 'h': editorMoveCursor(ARROW_LEFT); break;
+    case 'j': editorMoveCursor(ARROW_DOWN); break;
+    case 'k': editorMoveCursor(ARROW_UP); break;
+    case 'l': editorMoveCursor(ARROW_RIGHT); break;
+
     case 'p': {
       int top = E.cy;
       int count = (E.cy < E.numrows) ? 1 : 0;
@@ -277,6 +189,7 @@ void editorProcessNormalMode(int c) {
       editorPaste();
       undoCommit();
     } break;
+
     case 'x':
       if (E.cy < E.numrows) {
         undoBegin(E.cy, 1);
@@ -296,39 +209,6 @@ void editorProcessNormalMode(int c) {
       exit(0);
       break;
   }
-}
-
-void handleCommandMode() {
-  char *cmd = editorPrompt(":%s", NULL);
-
-  if (cmd == NULL)
-    return;
-
-  if (strcmp(cmd, "q") == 0) {
-    if (E.dirty) {
-      editorSetStatusMessage("No write since last change (add ! to override)");
-    } else {
-      write(STDOUT_FILENO, "\x1b[2J", 4);
-      write(STDOUT_FILENO, "\x1b[H", 3);
-      exit(0);
-    }
-  } else if (strcmp(cmd, "q!") == 0) {
-    write(STDOUT_FILENO, "\x1b[2J", 4);
-    write(STDOUT_FILENO, "\x1b[H", 3);
-    exit(0);
-  } else if (strcmp(cmd, "w") == 0) {
-    disableRawMode();
-    editorSave();
-  } else if (strcmp(cmd, "wq") == 0) {
-    editorSave();
-    exit(0);
-  } else if (strcmp(cmd, "f") == 0 || strcmp(cmd, "find") == 0) {
-    editorFind();
-  } else {
-    editorSetStatusMessage("Unknown command: %s", cmd);
-  }
-
-  free(cmd);
 }
 
 void editorProcessInsertMode(int c) {
@@ -434,9 +314,18 @@ void editorProcessInsertMode(int c) {
   quit_times = TX_QUIT_TIMES;
 }
 
-void editorJumpToEnd() {
-  if (E.numrows > 0) {
-    E.cy = E.numrows - 1;
-    E.cx = 0;
+void editorProcessKeypress() {
+  int c = editorReadKey();
+
+  switch (E.mode) {
+    case MODE_NORMAL:
+      editorProcessNormalMode(c);
+      break;
+    case MODE_INSERT:
+      editorProcessInsertMode(c);
+      break;
+    case MODE_VISUAL:
+      editorProcessVisualMode(c);
+      break;
   }
 }
