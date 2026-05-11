@@ -40,7 +40,7 @@ void editorScroll() {
     CB.coloff = CB.rx;
   }
   if (CB.rx >= CB.coloff + E.screencols - E.gutter_width) {
-    CB.coloff = CB.rx - E.screencols + 1;
+    CB.coloff = CB.rx - E.screencols + E.gutter_width + 1;
   }
 }
 
@@ -113,7 +113,7 @@ void editorDrawRows(struct abuf *ab) {
 
       int len = CB.row[filerow].rsize - CB.coloff;
       if (len < 0) len = 0;
-      if (len > E.screencols) len = E.screencols;
+      if (len > E.screencols - E.gutter_width) len = E.screencols - E.gutter_width;
 
       char *render = (len > 0) ? &CB.row[filerow].render[CB.coloff] : NULL;
       unsigned char *hl = (len > 0) ? &CB.row[filerow].hl[CB.coloff] : NULL;
@@ -167,7 +167,7 @@ void editorDrawRows(struct abuf *ab) {
   }
 }
 
-void *editorModeToString() {
+char *editorModeToString() {
   switch (E.mode) {
   case MODE_INSERT:
     return " INSERT ";

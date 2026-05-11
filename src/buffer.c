@@ -1,7 +1,7 @@
 #include "tx.h"
 
 int bufferNew(void) {
-    E.buffers = realloc(E.buffers, sizeof(Buffer) * (E.buf_current + 1));
+    E.buffers = realloc(E.buffers, sizeof(Buffer) * (E.buf_count + 1));
     Buffer *b = &E.buffers[E.buf_count];
 
     b->filename = NULL;
@@ -35,6 +35,7 @@ void bufferOpen(char *filename) {
 
     int idx = bufferNew();
     bufferSwitch(idx);
+    editorOpen(filename);
 }
 
 void bufferFree(int idx) {

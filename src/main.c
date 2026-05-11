@@ -25,7 +25,6 @@ int main(int argc, char *argv[]) {
     int cfg_result = editorLoadConfig(config_path, &E.settings);
     if (cfg_result == -1) {
         fprintf(stderr, "Failed to parse config file: %s\n", config_path);
-        exit(1);
     }
 
     bufferNew();
