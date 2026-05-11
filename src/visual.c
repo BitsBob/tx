@@ -11,14 +11,14 @@ void editorYankSelection() {
   if (E.mode != MODE_VISUAL)
     return;
 
-  int start_y = E.vis_start_cy, end_y = E.cy;
-  int start_x = E.vis_start_cx, end_x = E.cx;
+  int start_y = E.vis_start_cy, end_y = CB.cy;
+  int start_x = E.vis_start_cx, end_x = CB.cx;
   normalizeSelection(&start_y, &start_x, &end_y, &end_x);
 
   size_t total_len = 0;
   for (int y = start_y; y <= end_y; y++) {
     int row_start = (y == start_y) ? start_x : 0;
-    int row_end = (y == end_y) ? end_x : E.row[y].size;
+    int row_end = (y == end_y) ? end_x : CB.row[y].size;
     total_len += row_end - row_start;
     if (y != end_y)
       total_len += 1;
@@ -31,10 +31,10 @@ void editorYankSelection() {
   size_t idx = 0;
   for (int y = start_y; y <= end_y; y++) {
     int row_start = (y == start_y) ? start_x : 0;
-    int row_end = (y == end_y) ? end_x : E.row[y].size;
+    int row_end = (y == end_y) ? end_x : CB.row[y].size;
 
     for (int x = row_start; x < row_end; x++) {
-      YANKED_TEXT[idx++] = E.row[y].chars[x];
+      YANKED_TEXT[idx++] = CB.row[y].chars[x];
     }
 
     if (y != end_y) {
@@ -52,14 +52,14 @@ void editorDeleteSelection() {
   if (E.mode != MODE_VISUAL)
     return;
 
-  int start_y = E.vis_start_cy, end_y = E.cy;
-  int start_x = E.vis_start_cx, end_x = E.cx;
+  int start_y = E.vis_start_cy, end_y = CB.cy;
+  int start_x = E.vis_start_cx, end_x = CB.cx;
   normalizeSelection(&start_y, &start_x, &end_y, &end_x);
 
   editorYankSelection();
 
-  erow *first_row = &E.row[start_y];
-  erow *last_row = &E.row[end_y];
+  erow *first_row = &CB.row[start_y];
+  erow *last_row = &CB.row[end_y];
 
   char *suffix = &last_row->chars[end_x];
   int suffix_len = last_row->size - end_x;
@@ -73,10 +73,10 @@ void editorDeleteSelection() {
     rows_to_delete--;
   }
 
-  E.cx = start_x;
-  E.cy = start_y;
+  CB.cx = start_x;
+  CB.cy = start_y;
   E.mode = MODE_NORMAL;
-  E.dirty++;
+  CB.dirty++;
   editorSetStatusMessage("Deleted selection");
 }
 
@@ -87,8 +87,8 @@ void editorProcessVisualMode(int c) {
       break;
 
     case 'p': {
-      int top = E.cy;
-      int count = (E.cy < E.numrows) ? 1 : 0;
+      int top = CB.cy;
+      int count = (CB.cy < CB.numrows) ? 1 : 0;
       undoBegin(top, count);
       editorPaste();
       undoCommit();
@@ -104,11 +104,11 @@ void editorProcessVisualMode(int c) {
 
     case 'd':
     case 'x': {
-      int sy = E.vis_start_cy, ey = E.cy;
+      int sy = E.vis_start_cy, ey = CB.cy;
       if (sy > ey) { int t = sy; sy = ey; ey = t; }
       int top = sy;
       int count = ey - sy + 1;
-      if (top + count > E.numrows) count = E.numrows - top;
+      if (top + count > CB.numrows) count = CB.numrows - top;
       if (count < 0) count = 0;
       undoBegin(top, count);
       editorDeleteSelection();

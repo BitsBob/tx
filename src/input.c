@@ -43,43 +43,43 @@ char *editorPrompt(char *prompt, void (*callback)(char *, int)) {
 }
 
 void editorMoveCursor(int key) {
-  erow *row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
+  erow *row = (CB.cy >= CB.numrows) ? NULL : &CB.row[CB.cy];
   switch (key) {
     case ARROW_LEFT:
-      if (E.cx != 0)
-        E.cx--;
+      if (CB.cx != 0)
+        CB.cx--;
       break;
     case ARROW_RIGHT:
-      if (row && E.cx < row->size)
-        E.cx++;
+      if (row && CB.cx < row->size)
+        CB.cx++;
       break;
     case ARROW_UP:
-      if (E.cy != 0)
-        E.cy--;
+      if (CB.cy != 0)
+        CB.cy--;
       break;
     case ARROW_DOWN:
-      if (E.cy < E.numrows)
-        E.cy++;
+      if (CB.cy < CB.numrows)
+        CB.cy++;
       break;
   }
 
-  row = (E.cy >= E.numrows) ? NULL : &E.row[E.cy];
+  row = (CB.cy >= CB.numrows) ? NULL : &CB.row[CB.cy];
   int rowlen = row ? row->size : 0;
-  if (E.cx > rowlen) {
-    E.cx = rowlen;
+  if (CB.cx > rowlen) {
+    CB.cx = rowlen;
   }
 }
 
 void editorJumpToTop() {
-  E.cy = 0;
-  E.cx = 0;
-  E.rowoff = 0;
+  CB.cy = 0;
+  CB.cx = 0;
+  CB.rowoff = 0;
 }
 
 void editorJumpToEnd() {
-  if (E.numrows > 0) {
-    E.cy = E.numrows - 1;
-    E.cx = 0;
+  if (CB.numrows > 0) {
+    CB.cy = CB.numrows - 1;
+    CB.cx = 0;
   }
 }
 
@@ -87,11 +87,11 @@ void editorProcessNormalMode(int c) {
   switch (E.pendingOp) {
     case OP_DELETE:
       if (c == 'd') {
-        undoBegin(E.cy, 1);
+        undoBegin(CB.cy, 1);
         editorDeleteLine();
         undoCommit();
       } else if (c == 'w') {
-        undoBegin(E.cy, 1);
+        undoBegin(CB.cy, 1);
         editorDeleteWord();
         undoCommit();
       }
@@ -111,14 +111,14 @@ void editorProcessNormalMode(int c) {
 
     case OP_INSERT:
       if (c == 'c') {
-        undoBegin(E.cy, 1);
+        undoBegin(CB.cy, 1);
         editorDeleteLine();
         editorInsertNewline();
         undoCommit();
         E.mode = MODE_INSERT;
         E.pendingOp = OP_NONE;
       } else if (c == 'w') {
-        undoBegin(E.cy, 1);
+        undoBegin(CB.cy, 1);
         editorDeleteWord();
         undoCommit();
         E.mode = MODE_INSERT;
@@ -134,8 +134,8 @@ void editorProcessNormalMode(int c) {
       break;
 
     case 'v':
-      E.vis_start_cx = E.cx;
-      E.vis_start_cy = E.cy;
+      E.vis_start_cx = CB.cx;
+      E.vis_start_cy = CB.cy;
       E.mode = MODE_VISUAL;
       break;
 
@@ -183,16 +183,16 @@ void editorProcessNormalMode(int c) {
     case 'l': editorMoveCursor(ARROW_RIGHT); break;
 
     case 'p': {
-      int top = E.cy;
-      int count = (E.cy < E.numrows) ? 1 : 0;
+      int top = CB.cy;
+      int count = (CB.cy < CB.numrows) ? 1 : 0;
       undoBegin(top, count);
       editorPaste();
       undoCommit();
     } break;
 
     case 'x':
-      if (E.cy < E.numrows) {
-        undoBegin(E.cy, 1);
+      if (CB.cy < CB.numrows) {
+        undoBegin(CB.cy, 1);
         editorDelCharUnderCursor();
         undoCommit();
       }
@@ -212,46 +212,31 @@ void editorProcessNormalMode(int c) {
 }
 
 void editorProcessInsertMode(int c) {
-  static int quit_times = TX_QUIT_TIMES;
-
   switch (c) {
     case '\r': {
-      int count = (E.cy < E.numrows) ? 1 : 0;
-      undoBegin(E.cy, count);
+      int count = (CB.cy < CB.numrows) ? 1 : 0;
+      undoBegin(CB.cy, count);
       editorInsertNewline();
       undoCommit();
     } break;
-
-    case CTRL_KEY('q'):
-      if (E.dirty && quit_times > 0) {
-        editorSetStatusMessage("WARNING!!! File has unsaved changes. "
-                               "Press Ctrl-Q %d more times to quit.",
-                               quit_times);
-        quit_times--;
-        return;
-      }
-      write(STDOUT_FILENO, "\x1b[2J", 4);
-      write(STDOUT_FILENO, "\x1b[H", 3);
-      exit(0);
-      break;
 
     case CTRL_KEY('s'):
       editorSave();
       break;
 
     case HOME_KEY:
-      E.cx = 0;
+      CB.cx = 0;
       break;
     case END_KEY:
-      if (E.cy < E.numrows)
-        E.cx = E.row[E.cy].size;
+      if (CB.cy < CB.numrows)
+        CB.cx = CB.row[CB.cy].size;
       break;
 
     case BACKSPACE:
     case CTRL_KEY('h'):
     case DEL_KEY: {
-      int top = (c == DEL_KEY) ? E.cy : (E.cy > 0 ? E.cy - 1 : 0);
-      int count = E.numrows - top;
+      int top = (c == DEL_KEY) ? CB.cy : (CB.cy > 0 ? CB.cy - 1 : 0);
+      int count = CB.numrows - top;
       if (count > 2) count = 2;
       if (count < 0) count = 0;
       undoBegin(top, count);
@@ -264,11 +249,11 @@ void editorProcessInsertMode(int c) {
     case PAGE_UP:
     case PAGE_DOWN: {
       if (c == PAGE_UP) {
-        E.cy = E.rowoff;
+        CB.cy = CB.rowoff;
       } else if (c == PAGE_DOWN) {
-        E.cy = E.rowoff + E.screenrows - 1;
-        if (E.cy > E.numrows)
-          E.cy = E.numrows;
+        CB.cy = CB.rowoff + E.screenrows - 1;
+        if (CB.cy > CB.numrows)
+          CB.cy = CB.numrows;
       }
       int times = E.screenrows;
       while (times--)
@@ -295,8 +280,8 @@ void editorProcessInsertMode(int c) {
       char close = (c == '{') ? '}' :
                    (c == '(') ? ')' :
                    (c == '[') ? ']' : c;
-      int count = (E.cy < E.numrows) ? 1 : 0;
-      undoBegin(E.cy, count);
+      int count = (CB.cy < CB.numrows) ? 1 : 0;
+      undoBegin(CB.cy, count);
       editorInsertChar(c);
       editorInsertChar(close);
       editorMoveCursor(ARROW_LEFT);
@@ -304,14 +289,13 @@ void editorProcessInsertMode(int c) {
     } break;
 
     default: {
-      int count = (E.cy < E.numrows) ? 1 : 0;
-      undoBegin(E.cy, count);
+      int count = (CB.cy < CB.numrows) ? 1 : 0;
+      undoBegin(CB.cy, count);
       editorInsertChar(c);
       undoCommit();
     } break;
   }
 
-  quit_times = TX_QUIT_TIMES;
 }
 
 void editorProcessKeypress() {

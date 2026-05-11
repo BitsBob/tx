@@ -26,35 +26,35 @@ void abAppend(struct abuf *ab, const char *s, int len) {
 void abFree(struct abuf *ab) { free(ab->b); }
 
 void editorScroll() {
-  E.rx = E.cx;
-  if (E.cy < E.numrows) {
-    E.rx = editorRowCxToRx(&E.row[E.cy], E.cx);
+  CB.rx = CB.cx;
+  if (CB.cy < CB.numrows) {
+    CB.rx = editorRowCxToRx(&CB.row[CB.cy], CB.cx);
   }
-  if (E.cy < E.rowoff) {
-    E.rowoff = E.cy;
+  if (CB.cy < CB.rowoff) {
+    CB.rowoff = CB.cy;
   }
-  if (E.cy >= E.rowoff + E.screenrows) {
-    E.rowoff = E.cy - E.screenrows + 1;
+  if (CB.cy >= CB.rowoff + E.screenrows) {
+    CB.rowoff = CB.cy - E.screenrows + 1;
   }
-  if (E.rx < E.coloff) {
-    E.coloff = E.rx;
+  if (CB.rx < CB.coloff) {
+    CB.coloff = CB.rx;
   }
-  if (E.rx >= E.coloff + E.screencols) {
-    E.coloff = E.rx - E.screencols + 1;
+  if (CB.rx >= CB.coloff + E.screencols - E.gutter_width) {
+    CB.coloff = CB.rx - E.screencols + 1;
   }
 }
 
 int isCharSelected(int x, int y) {
-  if (E.mode != MODE_VISUAL || E.numrows == 0 || y >= E.numrows) return 0;
+  if (E.mode != MODE_VISUAL || CB.numrows == 0 || y >= CB.numrows) return 0;
   
   int start_y = E.vis_start_cy;
-  int end_y = E.cy;
+  int end_y = CB.cy;
 
-  if (start_y >= E.numrows) start_y = E.numrows - 1;
-  if (end_y >= E.numrows) end_y = E.numrows - 1;
+  if (start_y >= CB.numrows) start_y = CB.numrows - 1;
+  if (end_y >= CB.numrows) end_y = CB.numrows - 1;
 
-  int start_x = editorRowCxToRx(&E.row[start_y], E.vis_start_cx);
-  int end_x   = E.rx;
+  int start_x = editorRowCxToRx(&CB.row[start_y], E.vis_start_cx);
+  int end_x   = CB.rx;
 
   if (start_y > end_y ||
      (start_y == end_y && start_x > end_x)) {
@@ -70,11 +70,20 @@ int isCharSelected(int x, int y) {
 }
 
 void editorDrawRows(struct abuf *ab) {
+  int digits = 1, n= CB.numrows;
+  while (n >= 10) {
+    digits++;
+    n /= 10;
+  }
+
+  int gutter = E.settings.CONFIG_NUMBERS ? digits + 1 : 0;
+  E.gutter_width = gutter;
+
   int y;
   for (y = 0; y < E.screenrows; y++) {
-    int filerow = y + E.rowoff;
-    if (filerow >= E.numrows) {
-      if (E.numrows == 0 && y == E.screenrows / 3) {
+    int filerow = y + CB.rowoff;
+    if (filerow >= CB.numrows) {
+      if (CB.numrows == 0 && y == E.screenrows / 3) {
         char welcome[80];
         int welcomelen = snprintf(welcome, sizeof(welcome),
                                   "TX editor -- version %s", TX_VERSION);
@@ -94,19 +103,29 @@ void editorDrawRows(struct abuf *ab) {
         abAppend(ab, "~", 1);
       }
     } else {
-      int len = E.row[filerow].rsize - E.coloff;
+      if (E.settings.CONFIG_NUMBERS) {
+        char linenum[16];
+        int ln_len = snprintf(linenum, sizeof(linenum), "%*d ", digits, filerow + 1);
+        abAppend(ab, "\x1b[90m", 5);
+        abAppend(ab, linenum, ln_len);
+        abAppend(ab, "\x1b[m", 3);
+      }
+
+      int len = CB.row[filerow].rsize - CB.coloff;
       if (len < 0) len = 0;
       if (len > E.screencols) len = E.screencols;
 
-      char *render = (len > 0) ? &E.row[filerow].render[E.coloff] : NULL;
-      unsigned char *hl = (len > 0) ? &E.row[filerow].hl[E.coloff] : NULL;
+      char *render = (len > 0) ? &CB.row[filerow].render[CB.coloff] : NULL;
+      unsigned char *hl = (len > 0) ? &CB.row[filerow].hl[CB.coloff] : NULL;
       int in_selection = 0;
       int current_color = -1;
 
       int j = 0;
       while (j < len) {
-        int selected = (E.mode == MODE_VISUAL && isCharSelected(j + E.coloff, filerow));
-        int color = (hl[j] == HL_NORMAL) ? -1 : editorSyntaxToColor(hl[j]);
+        int selected = (E.mode == MODE_VISUAL && isCharSelected(j + CB.coloff, filerow));
+        int color = (E.settings.CONFIG_SYNTAX && hl[j] != HL_NORMAL)
+              ? editorSyntaxToColor(hl[j])
+              : -1;
 
         if (selected && !in_selection) {
           abAppend(ab, "\x1b[7m", 4);
@@ -130,7 +149,7 @@ void editorDrawRows(struct abuf *ab) {
         int run_start = j;
         j++;
         while (j < len) {
-          int next_selected = (E.mode == MODE_VISUAL && isCharSelected(j + E.coloff, filerow));
+          int next_selected = (E.mode == MODE_VISUAL && isCharSelected(j + CB.coloff, filerow));
           int next_color = (hl[j] == HL_NORMAL) ? -1 : editorSyntaxToColor(hl[j]);
           if (next_selected != selected || next_color != color)
             break;
@@ -168,12 +187,12 @@ void editorDrawStatusBar(struct abuf *ab) {
 
   char status[80], rstatus[80];
   int len = snprintf(status, sizeof(status), " %.20s - %d lines %s",
-                     E.filename ? E.filename : "[No Name]", E.numrows,
-                     E.dirty ? "(modified)" : "");
+                     CB.filename ? CB.filename : "[No Name]", CB.numrows,
+                     CB.dirty ? "(modified)" : "");
 
   int rlen = snprintf(rstatus, sizeof(rstatus), " %s | %d/%d ",
-                      E.syntax ? E.syntax->filetype : "no ft",
-                      E.cy + 1, E.numrows);
+                      CB.syntax ? CB.syntax->filetype : "no ft",
+                      CB.cy + 1, CB.numrows);
   
   if (modelen > E.screencols) modelen = E.screencols;
 
@@ -226,8 +245,8 @@ void editorRefreshScreen() {
   }
 
   char buf[32];
-  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (E.cy - E.rowoff) + 1,
-           (E.rx - E.coloff) + 1);
+  snprintf(buf, sizeof(buf), "\x1b[%d;%dH", (CB.cy - CB.rowoff) + 1,
+           (CB.rx - CB.coloff) + E.gutter_width + 1);
   abAppend(&ab, buf, strlen(buf));
 
   abAppend(&ab, "\x1b[?25h", 6);
@@ -245,6 +264,11 @@ void editorSetStatusMessage(const char *fmt, ...) {
 }
 
 void editorSetFortuneStatusMessage() {
+  if (!E.settings.CONFIG_STATUS_FORTUNE) {
+    editorSetStatusMessage("");
+    return;
+  }
+
   FILE *fp = popen("fortune -s 2>/dev/null", "r");
   if (!fp) {
     editorSetStatusMessage("Unfortunate.");

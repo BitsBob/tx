@@ -27,7 +27,7 @@ static char **snapshot(int top, int count) {
   if (count <= 0) return NULL;
   char **arr = malloc(sizeof(char *) * count);
   for (int i = 0; i < count; i++) {
-    erow *r = &E.row[top + i];
+    erow *r = &CB.row[top + i];
     arr[i] = malloc(r->size + 1);
     memcpy(arr[i], r->chars, r->size);
     arr[i][r->size] = '\0';
@@ -93,34 +93,34 @@ void undoBegin(int top, int count) {
   cancel_pending();
 
   if (top < 0) top = 0;
-  if (top > E.numrows) top = E.numrows;
+  if (top > CB.numrows) top = CB.numrows;
   if (count < 0) count = 0;
-  if (top + count > E.numrows) count = E.numrows - top;
+  if (top + count > CB.numrows) count = CB.numrows - top;
 
   u_p_top = top;
-  u_p_numrows = E.numrows;
+  u_p_numrows = CB.numrows;
   u_p_old_count = count;
   u_p_old_lines = snapshot(top, count);
-  u_p_cx = E.cx;
-  u_p_cy = E.cy;
+  u_p_cx = CB.cx;
+  u_p_cy = CB.cy;
   u_pending = 1;
 }
 
 void undoCommit(void) {
   if (!u_pending) return;
 
-  int delta = E.numrows - u_p_numrows;
+  int delta = CB.numrows - u_p_numrows;
   int new_count = u_p_old_count + delta;
   if (new_count < 0) new_count = 0;
 
   int top = u_p_top;
-  if (top > E.numrows) top = E.numrows;
-  if (top + new_count > E.numrows) new_count = E.numrows - top;
+  if (top > CB.numrows) top = CB.numrows;
+  if (top + new_count > CB.numrows) new_count = CB.numrows - top;
 
   char **new_lines = snapshot(top, new_count);
 
   if (lines_equal(u_p_old_lines, u_p_old_count, new_lines, new_count) &&
-      E.cx == u_p_cx && E.cy == u_p_cy) {
+      CB.cx == u_p_cx && CB.cy == u_p_cy) {
     free_lines(new_lines, new_count);
     free_lines(u_p_old_lines, u_p_old_count);
     u_p_old_lines = NULL;
@@ -138,8 +138,8 @@ void undoCommit(void) {
   e->new_lines = new_lines;
   e->cx_before = u_p_cx;
   e->cy_before = u_p_cy;
-  e->cx_after = E.cx;
-  e->cy_after = E.cy;
+  e->cx_after = CB.cx;
+  e->cy_after = CB.cy;
 
   u_undo_stack = e;
   u_undo_len++;
@@ -153,14 +153,14 @@ void undoCommit(void) {
 }
 
 static void clamp_cursor(void) {
-  if (E.cy < 0) E.cy = 0;
-  if (E.cy > E.numrows) E.cy = E.numrows;
-  if (E.cy < E.numrows) {
-    if (E.cx > E.row[E.cy].size) E.cx = E.row[E.cy].size;
+  if (CB.cy < 0) CB.cy = 0;
+  if (CB.cy > CB.numrows) CB.cy = CB.numrows;
+  if (CB.cy < CB.numrows) {
+    if (CB.cx > CB.row[CB.cy].size) CB.cx = CB.row[CB.cy].size;
   } else {
-    E.cx = 0;
+    CB.cx = 0;
   }
-  if (E.cx < 0) E.cx = 0;
+  if (CB.cx < 0) CB.cx = 0;
 }
 
 static void apply_entry(int top, int remove_count,
@@ -184,8 +184,8 @@ void undoUndo(void) {
   u_undo_len--;
 
   apply_entry(e->top, e->new_count, e->old_lines, e->old_count);
-  E.cx = e->cx_before;
-  E.cy = e->cy_before;
+  CB.cx = e->cx_before;
+  CB.cy = e->cy_before;
   clamp_cursor();
 
   e->next = u_redo_stack;
@@ -204,8 +204,8 @@ void undoRedo(void) {
   u_redo_stack = e->next;
 
   apply_entry(e->top, e->old_count, e->new_lines, e->new_count);
-  E.cx = e->cx_after;
-  E.cy = e->cy_after;
+  CB.cx = e->cx_after;
+  CB.cy = e->cy_after;
   clamp_cursor();
 
   e->next = u_undo_stack;

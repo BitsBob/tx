@@ -1,5 +1,9 @@
 #ifndef TX_H
 #define TX_H
+
+#define _DEFAULT_SOURCE
+#define _BSD_SOURCE
+#define _GNU_SOURCE
 #define _POSIX_C_SOURCE 200809L
 
 #include <ctype.h>
@@ -13,18 +17,24 @@
 #include <termios.h>
 #include <time.h>
 #include <unistd.h>
-
-#define _DEFAULT_SOURCE
-#define _BSD_SOURCE
-#define _GNU_SOURCE
+#include <stdbool.h>
+#include <signal.h>
 
 #define MAX_YANKS 10
-#define TX_VERSION "0.1.1"
-#define TX_TAB_STOP 8
-#define TX_QUIT_TIMES 3
+#define TX_VERSION "0.1.3"
 #define TX_UNDO_MAX 200
 
 #define CTRL_KEY(k) ((k) & 0x1f)
+
+struct configOptions {
+  int CONFIG_TAB_STOP;
+  int CONFIG_UNDO_MAX;
+  bool CONFIG_NUMBERS;
+  bool CONFIG_SYNTAX;
+  bool CONFIG_SEARCH_CASE_SENSITIVE;
+  bool CONFIG_SEARCH_HIGHLIGHT;
+  bool CONFIG_STATUS_FORTUNE;
+};
 
 enum pendingOperations {
   OP_NONE = 0,
@@ -91,28 +101,37 @@ typedef struct erow {
   int hl_open_comment;
 } erow;
 
-struct editorConfig {
+typedef struct {
   char *filename;
+  erow *row;
+  int numrows;
+  int cx, cy;
+  int rx;
+  int rowoff;
+  int coloff;
+  int dirty;
+  struct editorSyntax *syntax;
+} Buffer;
+
+struct editorConfig {
+  Buffer *buffers;
+  int buf_current;
+  int buf_count;
   char *yank_buffer;
   char statusmsg[80];
-  erow *row;
-  int coloff;
-  int cx, cy;
-  int dirty;
   int last_coloff;
   int last_cx, last_cy;
   int last_rowoff;
   int mode;
-  int numrows;
-  int rowoff;
+  int tab_stop;
   int pendingOp;
-  int rx;
   int screencols;
   int screenrows;
+  int gutter_width;
   int vis_start_cx, vis_start_cy;
-  struct editorSyntax *syntax;
   struct termios orig_termios;
   time_t statusmsg_time;
+  struct configOptions settings;
 };
 
 extern struct editorConfig E;
@@ -131,6 +150,7 @@ void editorDelChar();
 void editorDelCharUnderCursor();
 void editorDelRow(int at);
 void editorFind();
+void editorFreeRow(erow *row);
 void editorInsertChar(int c);
 void editorInsertNewline();
 void editorInsertRow(int at, char *s, size_t len);
@@ -145,6 +165,8 @@ void editorDeleteWord();
 void editorUpdateSyntax(erow *row);
 void editorSelectSyntaxHighlight();
 int editorSyntaxToColor(int hl);
+int editorLoadConfig(char *path, struct configOptions *cfg);
+
 
 // output.c
 void editorRefreshScreen();
@@ -173,6 +195,15 @@ void undoBegin(int top, int count);
 void undoCommit(void);
 void undoUndo(void);
 void undoRedo(void);
+
+// buffer.c
+void bufferClose(int idx);
+void bufferFree(int idx);
+void bufferOpen(char *filename);
+void bufferSwitch(int idx);
+int bufferNew();
+
+#define CB (E.buffers[E.buf_current])
 
 #endif
 
