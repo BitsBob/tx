@@ -129,7 +129,7 @@ void editorDrawRows(struct abuf *ab) {
 
       int j = 0;
       while (j < len) {
-        int selected = (E.mode == MODE_VISUAL && isCharSelected(j + CB.coloff, filerow));
+        int selected = (E.mode == MODE_VISUAL || E.mode == MODE_VISUAL_LINE) && isCharSelected(j + CB.coloff, filerow);
         int color = (E.settings.CONFIG_SYNTAX && hl[j] != HL_NORMAL)
               ? editorSyntaxToColor(hl[j])
               : -1;
@@ -156,7 +156,7 @@ void editorDrawRows(struct abuf *ab) {
         int run_start = j;
         j++;
         while (j < len) {
-          int next_selected = (E.mode == MODE_VISUAL && isCharSelected(j + CB.coloff, filerow));
+          int next_selected = (E.mode == MODE_VISUAL || E.mode == MODE_VISUAL_LINE) && isCharSelected(j + CB.coloff, filerow);
           int next_color = (hl[j] == HL_NORMAL) ? -1 : editorSyntaxToColor(hl[j]);
           if (next_selected != selected || next_color != color)
             break;

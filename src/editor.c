@@ -709,8 +709,6 @@ void editorDeleteLines() {
     undoBegin(start_y, count);
     editorYankLines();
 
-    E.mode = MODE_VISUAL_LINE;
-
     for (int i = 0; i < count; i++)
         editorDelRow(start_y);
 

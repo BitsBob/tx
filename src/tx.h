@@ -20,7 +20,7 @@
 #include <stdbool.h>
 #include <signal.h>
 
-#define TX_VERSION "0.1.3"
+#define TX_VERSION "0.1.3.1"
 #define TX_UNDO_MAX 200
 
 #define CTRL_KEY(k) ((k) & 0x1f)
