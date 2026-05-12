@@ -20,7 +20,6 @@
 #include <stdbool.h>
 #include <signal.h>
 
-#define MAX_YANKS 10
 #define TX_VERSION "0.1.3"
 #define TX_UNDO_MAX 200
 
@@ -79,12 +78,12 @@ enum editorHighlight {
 #define HL_HIGHLIGHT_STRINGS (1 << 1)
 
 struct editorSyntax {
-  char *filetype;
-  char **filematch;
-  char **keywords;
-  char *singleline_comment_start;
-  char *multiline_comment_start;
-  char *multiline_comment_end;
+  const char *filetype;
+  const char **filematch;
+  const char **keywords;
+  const char *singleline_comment_start;
+  const char *multiline_comment_start;
+  const char *multiline_comment_end;
   int flags;
 };
 

@@ -3,9 +3,8 @@
 
 #include "tx.h"
 
-
-static char *C_HL_extensions[] = {".c", ".h", ".cpp", ".cc", ".cxx", ".hpp", NULL};
-static char *C_HL_keywords[] = {
+static const char *C_HL_extensions[] = {".c", ".h", ".cpp", ".cc", ".cxx", ".hpp", NULL};
+static const char *C_HL_keywords[] = {
     "switch",   "if",       "while",    "for",      "break",    "continue",
     "return",   "else",     "struct",   "union",    "typedef",  "static",
     "enum",     "class",    "case",     "sizeof",   "volatile", "extern",
@@ -20,8 +19,8 @@ static char *C_HL_keywords[] = {
     "int8_t|",  "int16_t|", "int32_t|", "int64_t|", "wchar_t|", NULL
 };
 
-static char *PY_HL_extensions[] = {".py", ".pyw", NULL};
-static char *PY_HL_keywords[] = {
+static const char *PY_HL_extensions[] = {".py", ".pyw", NULL};
+static const char *PY_HL_keywords[] = {
     "and",      "as",       "assert",   "async",    "await",    "break",
     "class",    "continue", "def",      "del",      "elif",     "else",
     "except",   "finally",  "for",      "from",     "global",   "if",
@@ -34,8 +33,8 @@ static char *PY_HL_keywords[] = {
     "type|",    "object|",  NULL
 };
 
-static char *JS_HL_extensions[] = {".js", ".jsx", ".ts", ".tsx", ".mjs", NULL};
-static char *JS_HL_keywords[] = {
+static const char *JS_HL_extensions[] = {".js", ".jsx", ".ts", ".tsx", ".mjs", NULL};
+static const char *JS_HL_keywords[] = {
     "break",    "case",     "catch",    "class",    "const",    "continue",
     "debugger", "default",  "delete",   "do",       "else",     "export",
     "extends",  "finally",  "for",      "function", "if",       "import",
@@ -49,8 +48,8 @@ static char *JS_HL_keywords[] = {
     "enum|",    "interface|","type|",   NULL
 };
 
-static char *SH_HL_extensions[] = {".sh", ".bash", ".zsh", NULL};
-static char *SH_HL_keywords[] = {
+static const char *SH_HL_extensions[] = {".sh", ".bash", ".zsh", NULL};
+static const char *SH_HL_keywords[] = {
     "if",       "then",     "else",     "elif",     "fi",       "for",
     "while",    "do",       "done",     "case",     "esac",     "in",
     "function", "return",   "exit",     "local",    "export",   "readonly",
@@ -59,8 +58,8 @@ static char *SH_HL_keywords[] = {
     "true|",    "false|",   NULL
 };
 
-static char *RS_HL_extensions[] = {".rs", NULL};
-static char *RS_HL_keywords[] = {
+static const char *RS_HL_extensions[] = {".rs", NULL};
+static const char *RS_HL_keywords[] = {
     "as",       "break",    "const",    "continue", "crate",    "else",
     "enum",     "extern",   "fn",       "for",      "if",       "impl",
     "in",       "let",      "loop",     "match",    "mod",      "move",
@@ -75,8 +74,8 @@ static char *RS_HL_keywords[] = {
     "true|",    "false|",   NULL
 };
 
-static char *GO_HL_extensions[] = {".go", NULL};
-static char *GO_HL_keywords[] = {
+static const char *GO_HL_extensions[] = {".go", NULL};
+static const char *GO_HL_keywords[] = {
     "break",    "case",     "chan",      "const",    "continue", "default",
     "defer",    "else",     "fallthrough","for",     "func",     "go",
     "goto",     "if",       "import",   "interface","map",      "package",
@@ -89,8 +88,8 @@ static char *GO_HL_keywords[] = {
     "string|",  "error|",   "true|",    "false|",   "nil|",     NULL
 };
 
-static char *MAKE_HL_extensions[] = {"Makefile", "makefile", ".mk", NULL};
-static char *MAKE_HL_keywords[] = {
+static const char *MAKE_HL_extensions[] = {"Makefile", "makefile", ".mk", NULL};
+static const char *MAKE_HL_keywords[] = {
     "ifeq",     "ifneq",    "ifdef",    "ifndef",   "else",     "endif",
     "define",   "endef",    "include",  "override", "export",   "unexport",
     NULL
