@@ -1,5 +1,4 @@
 #include "tx.h"
-#include <unistd.h>
 
 LspClient *lspStart(const char *server_cmd[]) {
     int to_server[2];

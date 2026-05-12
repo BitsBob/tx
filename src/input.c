@@ -139,6 +139,12 @@ void editorProcessNormalMode(int c) {
       E.mode = MODE_VISUAL;
       break;
 
+    case 'V':
+      E.vis_start_cx = 0;
+      E.vis_start_cy = CB.cy;
+      E.mode = MODE_VISUAL_LINE;
+      break;
+
     case ':':
       editorProcessCommandMode();
       break;
@@ -280,7 +286,7 @@ void editorProcessInsertMode(int c) {
       if (!E.settings.CONFIG_AUTOPAIR) {
         break;
       }
-      
+
       char close = (c == '{') ? '}' :
                    (c == '(') ? ')' :
                    (c == '[') ? ']' : c;
@@ -313,6 +319,7 @@ void editorProcessKeypress() {
       editorProcessInsertMode(c);
       break;
     case MODE_VISUAL:
+    case MODE_VISUAL_LINE:
       editorProcessVisualMode(c);
       break;
   }

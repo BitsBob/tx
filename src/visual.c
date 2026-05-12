@@ -81,9 +81,14 @@ void editorDeleteSelection() {
 }
 
 void editorProcessVisualMode(int c) {
+  int line_mode = (E.mode == MODE_VISUAL_LINE);
   switch (c) {
     case 'y':
-      editorYankSelection();
+      if (line_mode) {
+        editorYankLines();
+      } else {
+        editorYankSelection();
+      }
       break;
 
     case 'p': {
@@ -103,7 +108,11 @@ void editorProcessVisualMode(int c) {
       break;
 
     case 'd':
-    case 'x': {
+    case 'x':
+    if (line_mode) {
+      editorDeleteLines();
+    } 
+    else {
       int sy = E.vis_start_cy, ey = CB.cy;
       if (sy > ey) { int t = sy; sy = ey; ey = t; }
       int top = sy;

@@ -1,6 +1,3 @@
-#ifndef SYNTAX_H
-#define SYNTAX_H
-
 #include "tx.h"
 
 static const char *C_HL_extensions[] = {".c", ".h", ".cpp", ".cc", ".cxx", ".hpp", NULL};
@@ -119,5 +116,3 @@ static struct editorSyntax HLDB[] = {
 };
 
 #define HLDB_ENTRIES (sizeof(HLDB) / sizeof(HLDB[0]))
-
-#endif

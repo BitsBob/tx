@@ -1,5 +1,5 @@
 #include "tx.h"
-#include "syntax.h"
+#include "syntax.c"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -664,6 +664,65 @@ void editorYankLine() {
   YANKED_LEN = row->size + 1;
 
   editorSetStatusMessage("Yanked 1 line");
+}
+
+void editorYankLines() {
+    int start_y = E.vis_start_cy;
+    int end_y = CB.cy;
+    if (start_y > end_y) { int t = start_y; start_y = end_y; end_y = t; }
+
+    if (start_y < 0) start_y = 0;
+    if (end_y >= CB.numrows) end_y = CB.numrows - 1;
+
+    size_t total = 0;
+    for (int y = start_y; y <= end_y; y++)
+        total += CB.row[y].size + 1;  // +1 for \n
+
+    free(YANKED_TEXT);
+    YANKED_TEXT = malloc(total + 1);
+    if (!YANKED_TEXT) return;
+
+    size_t idx = 0;
+    for (int y = start_y; y <= end_y; y++) {
+        memcpy(&YANKED_TEXT[idx], CB.row[y].chars, CB.row[y].size);
+        idx += CB.row[y].size;
+        YANKED_TEXT[idx++] = '\n';
+    }
+    YANKED_TEXT[idx] = '\0';
+    YANKED_LEN = idx;
+
+    int count = end_y - start_y + 1;
+    editorSetStatusMessage("Yanked %d line%s", count, count == 1 ? "" : "s");
+    E.mode = MODE_NORMAL;
+}
+
+void editorDeleteLines() {
+    int start_y = E.vis_start_cy;
+    int end_y = CB.cy;
+    if (start_y > end_y) { int t = start_y; start_y = end_y; end_y = t; }
+
+    if (start_y < 0) start_y = 0;
+    if (end_y >= CB.numrows) end_y = CB.numrows - 1;
+
+    int count = end_y - start_y + 1;
+
+    undoBegin(start_y, count);
+    editorYankLines();
+
+    E.mode = MODE_VISUAL_LINE;
+
+    for (int i = 0; i < count; i++)
+        editorDelRow(start_y);
+
+    if (start_y >= CB.numrows && CB.numrows > 0)
+        CB.cy = CB.numrows - 1;
+    else
+        CB.cy = start_y;
+    CB.cx = 0;
+
+    undoCommit();
+    E.mode = MODE_NORMAL;
+    editorSetStatusMessage("Deleted %d line%s", count, count == 1 ? "" : "s");
 }
 
 void editorPaste() {

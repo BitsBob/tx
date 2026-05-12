@@ -50,6 +50,7 @@ enum editorMode {
   MODE_INSERT,
   MODE_COMMAND,
   MODE_VISUAL,
+  MODE_VISUAL_LINE,
 };
 
 enum editorKey {
@@ -170,6 +171,8 @@ void editorSave();
 void editorUpdateRow(erow *row);
 void editorDeleteLine();
 void editorYankLine();
+void editorYankLines();
+void editorDeleteLines();
 void editorDeleteWord();
 void editorUpdateSyntax(erow *row);
 void editorSelectSyntaxHighlight();
@@ -215,4 +218,3 @@ int bufferNew();
 #define CB (E.buffers[E.buf_current])
 
 #endif
-

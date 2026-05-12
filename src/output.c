@@ -45,7 +45,14 @@ void editorScroll() {
 }
 
 int isCharSelected(int x, int y) {
-  if (E.mode != MODE_VISUAL || CB.numrows == 0 || y >= CB.numrows) return 0;
+  if (E.mode == MODE_VISUAL_LINE) {
+    int start_y = E.vis_start_cy;
+    int end_y = CB.cy;
+    if (start_y > end_y) { int t = start_y; start_y = end_y; end_y = t; }
+    return (y >= start_y && y <= end_y);
+  }
+
+  if (E.mode  != MODE_VISUAL || CB.numrows == 0 || y >= CB.numrows) return 0;
   
   int start_y = E.vis_start_cy;
   int end_y = CB.cy;
