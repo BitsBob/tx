@@ -33,6 +33,7 @@ struct configOptions {
   bool CONFIG_SEARCH_CASE_SENSITIVE;
   bool CONFIG_SEARCH_HIGHLIGHT;
   bool CONFIG_STATUS_FORTUNE;
+  bool CONFIG_LSP_ENABLE;
 };
 
 enum pendingOperations {
@@ -111,6 +112,14 @@ typedef struct {
   int dirty;
   struct editorSyntax *syntax;
 } Buffer;
+
+typedef struct {
+  int pid;
+  int in_fd;
+  int out_fd;
+  int active;
+  int next_id;
+} LspClient;
 
 struct editorConfig {
   Buffer *buffers;
