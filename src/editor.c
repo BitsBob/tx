@@ -38,11 +38,11 @@ void editorUpdateSyntax(erow *row) {
   if (CB.syntax == NULL)
     return;
 
-  char **keywords = CB.syntax->keywords;
+  const char **keywords = CB.syntax->keywords;
 
-  char *scs = CB.syntax->singleline_comment_start;
-  char *mcs = CB.syntax->multiline_comment_start;
-  char *mce = CB.syntax->multiline_comment_end;
+  const char *scs = CB.syntax->singleline_comment_start;
+  const char *mcs = CB.syntax->multiline_comment_start;
+  const char *mce = CB.syntax->multiline_comment_end;
 
   int scs_len = scs ? strlen(scs) : 0;
   int mcs_len = mcs ? strlen(mcs) : 0;
@@ -274,8 +274,10 @@ void editorOpen(char *filename) {
   editorSelectSyntaxHighlight();
 
   FILE *fp = fopen(filename, "r");
-  if (!fp)
-    die("fopen");
+  if (!fp) {
+    editorSetStatusMessage("New file: %s", filename);
+    return;
+  }
   char *line = NULL;
   size_t linecap = 0;
   ssize_t linelen;
