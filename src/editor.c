@@ -306,6 +306,8 @@ int editorLoadConfig(char *path, struct configOptions *cfg) {
   cfg->CONFIG_SEARCH_HIGHLIGHT      = true;
   cfg->CONFIG_STATUS_FORTUNE        = true;
   cfg->CONFIG_NUMBERS               = false;
+  cfg->CONFIG_LSP_ENABLE            = false;
+  cfg->CONFIG_AUTOPAIR              = true;
 
   char line[256];
   int lineno = 0;
@@ -344,6 +346,8 @@ int editorLoadConfig(char *path, struct configOptions *cfg) {
     else if (strcmp(key, "search_highlight") == 0)  cfg->CONFIG_SEARCH_HIGHLIGHT = parse_bool(value);
     else if (strcmp(key, "status_fortune") == 0)    cfg->CONFIG_STATUS_FORTUNE = parse_bool(value);
     else if (strcmp(key, "numbers") == 0)           cfg->CONFIG_NUMBERS = parse_bool(value);
+    else if (strcmp(key, "lsp_enable") == 0)        cfg->CONFIG_LSP_ENABLE = parse_bool(value);
+    else if (strcmp(key, "autopair") == 0)          cfg->CONFIG_AUTOPAIR = parse_bool(value);
     else fprintf(stderr, "config: unknown key on line %d: %s", lineno, key);
   }
 

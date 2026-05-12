@@ -34,6 +34,7 @@ struct configOptions {
   bool CONFIG_SEARCH_HIGHLIGHT;
   bool CONFIG_STATUS_FORTUNE;
   bool CONFIG_LSP_ENABLE;
+  bool CONFIG_AUTOPAIR;
 };
 
 enum pendingOperations {

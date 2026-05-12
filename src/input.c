@@ -277,6 +277,10 @@ void editorProcessInsertMode(int c) {
     case '[':
     case '\"':
     case '\'': {
+      if (!E.settings.CONFIG_AUTOPAIR) {
+        break;
+      }
+      
       char close = (c == '{') ? '}' :
                    (c == '(') ? ')' :
                    (c == '[') ? ']' : c;
