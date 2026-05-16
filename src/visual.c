@@ -1,4 +1,9 @@
 #include "tx.h"
+#include "editor.h"
+#include "input.h"
+#include "output.h"
+#include "undo.h"
+#include "visual.h"
 
 static void normalizeSelection(int *sy, int *sx, int *ey, int *ex) {
   if (*sy > *ey || (*sy == *ey && *sx > *ex)) {

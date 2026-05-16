@@ -1,4 +1,6 @@
 #include "tx.h"
+#include "editor.h"
+#include "terminal.h"
 
 void die(const char *s) {
   write(STDOUT_FILENO, "\x1b[2J", 4);

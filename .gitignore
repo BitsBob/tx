@@ -1,3 +1,4 @@
 *.o
 build
 .idea
+compile_flags.txt

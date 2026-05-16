@@ -1,4 +1,7 @@
 #include "tx.h"
+#include "editor.h"
+#include "output.h"
+#include "syntax.h"
 
 struct abuf {
   char *b;

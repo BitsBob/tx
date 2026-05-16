@@ -1,4 +1,7 @@
 #include "tx.h"
+#include "editor.h"
+#include "output.h"
+#include "undo.h"
 
 typedef struct u_entry u_entry_T;
 struct u_entry {

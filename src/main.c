@@ -1,7 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
 #include "tx.h"
+#include "buffer.h"
+#include "config.h"
+#include "editor.h"
+#include "input.h"
+#include "output.h"
+#include "terminal.h"
 
 struct editorConfig E = {};
 

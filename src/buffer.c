@@ -1,4 +1,7 @@
 #include "tx.h"
+#include "buffer.h"
+#include "editor.h"
+#include "output.h"
 
 int bufferNew(void) {
     E.buffers = realloc(E.buffers, sizeof(Buffer) * (E.buf_count + 1));

@@ -1,4 +1,8 @@
 #include "tx.h"
+#include "lsp.h"
+
+#include <sys/types.h>
+#include <sys/wait.h>
 
 LspClient *lspStart(const char *server_cmd[]) {
     int to_server[2];
@@ -60,6 +64,10 @@ void lspStop(LspClient *c) {
     free(c);
 }
 
-void lspSend(LspClient *c, const char *json);
-char *lspRead(LspClient *c);
-void lspStop(LspClient *c);
+void lspSend(LspClient *c, const char *json) {
+    
+}
+
+char *lspRead(LspClient *c) {
+
+}

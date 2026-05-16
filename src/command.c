@@ -1,4 +1,10 @@
 #include "tx.h"
+#include "buffer.h"
+#include "command.h"
+#include "editor.h"
+#include "input.h"
+#include "output.h"
+#include "search.h"
 
 static void clearScreenAndExit(void) {
     write(STDOUT_FILENO, "\x1b[2J", 4);
