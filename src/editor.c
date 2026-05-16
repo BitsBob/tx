@@ -320,7 +320,7 @@ void editorPaste(void) {
     editorSetStatusMessage("Pasted %zu bytes", YANKED_LEN);
 }
 
-int editorFindWordEnd(erow *row, int start_cx) {
+static int editorFindWordEnd(erow *row, int start_cx) {
     int i = start_cx;
     if (i < row->size && isspace(row->chars[i])) {
         while (i < row->size && isspace(row->chars[i])) i++;

@@ -11,7 +11,7 @@ struct abuf {
 
 #define ABUF_INIT {NULL, 0, 0}
 
-void abAppend(struct abuf *ab, const char *s, int len) {
+static void abAppend(struct abuf *ab, const char *s, int len) {
   if (ab->len + len > ab->cap) {
     int new_cap = ab->cap ? ab->cap * 2 : 256;
     while (new_cap < ab->len + len)
@@ -26,9 +26,9 @@ void abAppend(struct abuf *ab, const char *s, int len) {
   ab->len += len;
 }
 
-void abFree(struct abuf *ab) { free(ab->b); }
+static void abFree(struct abuf *ab) { free(ab->b); }
 
-void editorScroll() {
+static void editorScroll(void) {
   CB.rx = CB.cx;
   if (CB.cy < CB.numrows) {
     CB.rx = editorRowCxToRx(&CB.row[CB.cy], CB.cx);
@@ -47,7 +47,7 @@ void editorScroll() {
   }
 }
 
-int isCharSelected(int x, int y) {
+static int isCharSelected(int x, int y) {
   if (E.mode == MODE_VISUAL_LINE) {
     int start_y = E.vis_start_cy;
     int end_y = CB.cy;
@@ -79,7 +79,7 @@ int isCharSelected(int x, int y) {
   return 1;
 }
 
-void editorDrawRows(struct abuf *ab) {
+static void editorDrawRows(struct abuf *ab) {
   int digits = 1, n= CB.numrows;
   while (n >= 10) {
     digits++;
@@ -177,18 +177,17 @@ void editorDrawRows(struct abuf *ab) {
   }
 }
 
-char *editorModeToString() {
+static char *editorModeToString(void) {
   switch (E.mode) {
-  case MODE_INSERT:
-    return " INSERT ";
-  case MODE_COMMAND:
-    return " COMMAND ";
-  default:
-    return " NORMAL ";
+  case MODE_INSERT:      return " INSERT ";
+  case MODE_COMMAND:     return " COMMAND ";
+  case MODE_VISUAL:      return " VISUAL ";
+  case MODE_VISUAL_LINE: return " V-LINE ";
+  default:               return " NORMAL ";
   }
 }
 
-void editorDrawStatusBar(struct abuf *ab) {
+static void editorDrawStatusBar(struct abuf *ab) {
   abAppend(ab, "\x1b[7m", 4); // Invert colors
 
   char *modename = editorModeToString();
@@ -227,7 +226,7 @@ void editorDrawStatusBar(struct abuf *ab) {
   abAppend(ab, "\r\n", 2);
 }
 
-void editorDrawMessageBar(struct abuf *ab) {
+static void editorDrawMessageBar(struct abuf *ab) {
   abAppend(ab, "\x1b[K", 3);
   int msglen = strlen(E.statusmsg);
   if (msglen > E.screencols)

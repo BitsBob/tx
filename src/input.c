@@ -124,7 +124,6 @@ void editorProcessNormalMode(int c) {
         editorInsertNewline();
         undoCommit();
         E.mode = MODE_INSERT;
-        E.pendingOp = OP_NONE;
       } else if (c == 'w') {
         undoBegin(CB.cy, 1);
         editorDeleteWord();
