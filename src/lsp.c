@@ -26,15 +26,21 @@ LspClient *lspStart(const char *server_cmd[]) {
     }
 
     if (pid == 0) {
-        /* Child: rewire stdio then exec the server. */
+        /* Child: rewire stdio then exec the server.
+         * Stderr is silenced so server log output doesn't corrupt the display. */
         dup2(to_server[0], STDIN_FILENO);
         dup2(from_server[1], STDOUT_FILENO);
+
+        int devnull = open("/dev/null", O_WRONLY);
+        if (devnull != -1) {
+            dup2(devnull, STDERR_FILENO);
+            close(devnull);
+        }
 
         close(to_server[0]);   close(to_server[1]);
         close(from_server[0]); close(from_server[1]);
 
         execvp(server_cmd[0], (char *const *)server_cmd);
-        perror("lsp: execvp");
         _exit(1);
     }
 

@@ -21,7 +21,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#define TX_VERSION "0.1.3.1"
+#define TX_VERSION "1.4.0"
 #define TX_UNDO_MAX 200
 
 #define CTRL_KEY(k) ((k) & 0x1f)
