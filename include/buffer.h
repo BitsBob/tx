@@ -15,6 +15,7 @@ typedef struct {
     int coloff;
     int dirty;
     struct editorSyntax *syntax;
+    int readonly;
     int *diags;       /* severity per row: 0=none 1=error 2=warn 3=info 4=hint */
     int  diags_count; /* length of diags array (== numrows at last update)     */
     int  lsp_version; /* incremented on didOpen/didChange                      */

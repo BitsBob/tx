@@ -2,6 +2,7 @@
 #include "buffer.h"
 #include "command.h"
 #include "editor.h"
+#include "help.h"
 #include "input.h"
 #include "output.h"
 #include "search.h"
@@ -73,6 +74,10 @@ void editorProcessCommandMode() {
 
     } else if (strcmp(cmd, "f") == 0 || strcmp(cmd, "find") == 0) {
         editorFind();
+
+    } else if (strncmp(cmd, "h", 1) == 0 && (cmd[1] == '\0' || cmd[1] == ' ')) {
+        const char *topic = (cmd[1] == ' ') ? cmd + 2 : "";
+        editorOpenHelp(topic);
 
     } else {
         editorSetStatusMessage("Unknown command: %s", cmd);

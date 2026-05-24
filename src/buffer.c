@@ -20,6 +20,7 @@ int bufferNew(void) {
     b->rowoff = 0;
     b->coloff = 0;
     b->dirty = 0;
+    b->readonly = 0;
     b->syntax = NULL;
     b->diags = NULL;
     b->diags_count = 0;

@@ -175,6 +175,14 @@ void editorProcessNormalMode(int c) {
     case 'd':
       E.pendingOp = OP_DELETE;
       break;
+    
+    case 'w':
+      CB.cx = editorFindWordEnd(CB.row, CB.cx);
+      break;
+
+    case 'b':
+      CB.cx = editorFindWordStart(CB.row, CB.cx);
+      break;
 
     case ARROW_UP:
     case ARROW_DOWN:

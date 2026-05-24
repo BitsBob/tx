@@ -325,7 +325,7 @@ void editorPaste(void) {
     editorSetStatusMessage("Pasted %zu bytes", YANKED_LEN);
 }
 
-static int editorFindWordEnd(erow *row, int start_cx) {
+int editorFindWordEnd(erow *row, int start_cx) {
     int i = start_cx;
     if (i < row->size && isspace(row->chars[i])) {
         while (i < row->size && isspace(row->chars[i])) i++;
@@ -334,6 +334,17 @@ static int editorFindWordEnd(erow *row, int start_cx) {
         while (i < row->size &&  isspace(row->chars[i])) i++;
     }
     return i;
+}
+
+int editorFindWordStart(erow *row, int start_cx) {
+    int i = start_cx - 1;
+    if (i >= 0 && isspace(row->chars[i])) {
+        while (i >= 0 && isspace(row->chars[i])) i--;
+    } else {
+        while (i >= 0 && !isspace(row->chars[i])) i--;
+        while (i >= 0 &&  isspace(row->chars[i])) i--;
+    }
+    return i + 1;
 }
 
 void editorDeleteWord(void) {
@@ -391,6 +402,11 @@ void editorOpen(char *filename) {
 }
 
 void editorSave(void) {
+    if (CB.readonly) {
+        editorSetStatusMessage("Cannot write to read-only buffer.");
+        return;
+    }
+
     if (CB.filename == NULL) {
         CB.filename = editorPrompt("Write buffer as: %s", NULL);
         if (CB.filename == NULL) {

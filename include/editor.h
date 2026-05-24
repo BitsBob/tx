@@ -68,6 +68,8 @@ extern char  *YANKED_TEXT;
 extern size_t YANKED_LEN;
 
 /* Row helpers */
+int editorFindWordStart(erow *row, int start_cx);
+int editorFindWordEnd(erow *row, int start_cx);
 void  editorUpdateRow(erow *row);
 void  editorInsertRow(int at, char *s, size_t len);
 void  editorDelRow(int at);
