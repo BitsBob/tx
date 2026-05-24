@@ -66,11 +66,18 @@ void editorDeleteSelection() {
   erow *first_row = &CB.row[start_y];
   erow *last_row = &CB.row[end_y];
 
-  char *suffix = &last_row->chars[end_x];
+  /* Copy suffix before editorRowAppendString, which calls realloc on
+   * first_row->chars. When start_y == end_y the two rows are the same
+   * allocation, so suffix would become a dangling pointer without this copy. */
   int suffix_len = last_row->size - end_x;
+  char *suffix = malloc(suffix_len + 1);
+  memcpy(suffix, &last_row->chars[end_x], suffix_len);
+  suffix[suffix_len] = '\0';
 
   first_row->size = start_x;
+  first_row->chars[start_x] = '\0';
   editorRowAppendString(first_row, suffix, suffix_len);
+  free(suffix);
 
   int rows_to_delete = end_y - start_y;
   while (rows_to_delete > 0) {

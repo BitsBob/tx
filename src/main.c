@@ -3,6 +3,7 @@
 #include "config.h"
 #include "editor.h"
 #include "input.h"
+#include "lsp_diag.h"
 #include "output.h"
 #include "terminal.h"
 
@@ -29,6 +30,8 @@ int main(int argc, char *argv[]) {
     if (cfg_result == -1) {
         fprintf(stderr, "Failed to parse config file: %s\n", config_path);
     }
+
+    lspInit();
 
     bufferNew();
     E.buf_current = 0;

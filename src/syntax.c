@@ -2,6 +2,8 @@
 #include "editor.h"
 #include "syntax.h"
 
+/* Keywords ending with '|' are highlighted as secondary keywords (types).
+ * The trailing pipe is stripped before matching; it is just a marker. */
 static const char *C_HL_extensions[] = {".c", ".h", ".cpp", ".cc", ".cxx", ".hpp", NULL};
 static const char *C_HL_keywords[] = {
     "switch",   "if",       "while",    "for",      "break",    "continue",

@@ -13,6 +13,7 @@ struct configOptions {
     bool CONFIG_STATUS_FORTUNE;
     bool CONFIG_LSP_ENABLE;
     bool CONFIG_AUTOPAIR;
+    char CONFIG_LSP_CMD[256];
 };
 
 int editorLoadConfig(char *path, struct configOptions *cfg);

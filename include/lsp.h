@@ -4,14 +4,14 @@
 #include <stddef.h>
 
 typedef struct {
-    int    pid;
-    int    in_fd;
-    int    out_fd;
-    int    active;
-    int    next_id;
-    char  *rx_buf;
-    size_t rx_len;
-    size_t rx_cap;
+    int    pid;      /* server process id */
+    int    in_fd;    /* we write to the server here */
+    int    out_fd;   /* we read from the server here (non-blocking) */
+    int    active;   /* 0 once the server exits or an I/O error occurs */
+    int    next_id;  /* monotonically increasing request id counter */
+    char  *rx_buf;   /* receive buffer for partial messages */
+    size_t rx_len;   /* bytes currently in rx_buf */
+    size_t rx_cap;   /* allocated size of rx_buf */
 } LspClient;
 
 LspClient *lspStart(const char *server_cmd[]);

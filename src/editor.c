@@ -1,6 +1,7 @@
 #include "tx.h"
 #include "editor.h"
 #include "input.h"
+#include "lsp_diag.h"
 #include "output.h"
 #include "syntax.h"
 #include "undo.h"
@@ -12,7 +13,7 @@ int editorRowCxToRx(erow *row, int cx) {
     int rx = 0;
     for (int j = 0; j < cx; j++) {
         if (row->chars[j] == '\t')
-            rx += (E.tab_stop - 1) - (rx % E.tab_stop);
+            rx += (E.settings.CONFIG_TAB_STOP - 1) - (rx % E.settings.CONFIG_TAB_STOP);
         rx++;
     }
     return rx;
@@ -23,7 +24,7 @@ int editorRowRxToCx(erow *row, int rx) {
     int cx;
     for (cx = 0; cx < row->size; cx++) {
         if (row->chars[cx] == '\t')
-            cur_rx += (E.tab_stop - 1) - (cur_rx % E.tab_stop);
+            cur_rx += (E.settings.CONFIG_TAB_STOP - 1) - (cur_rx % E.settings.CONFIG_TAB_STOP);
         cur_rx++;
         if (cur_rx > rx) return cx;
     }
@@ -36,13 +37,13 @@ void editorUpdateRow(erow *row) {
         if (row->chars[j] == '\t') tabs++;
 
     free(row->render);
-    row->render = malloc(row->size + tabs * (E.tab_stop - 1) + 1);
+    row->render = malloc(row->size + tabs * (E.settings.CONFIG_TAB_STOP - 1) + 1);
 
     int idx = 0;
     for (int j = 0; j < row->size; j++) {
         if (row->chars[j] == '\t') {
             row->render[idx++] = ' ';
-            while (idx % E.tab_stop != 0)
+            while (idx % E.settings.CONFIG_TAB_STOP != 0)
                 row->render[idx++] = ' ';
         } else {
             row->render[idx++] = row->chars[j];
@@ -154,6 +155,10 @@ void editorDelCharUnderCursor(void) {
         CB.cx = row->size - 1;
 }
 
+/* Insert a newline at the cursor. Copies the current line's leading whitespace
+ * onto the new line. If the cursor is between a matched bracket pair like {}
+ * or [], an extra blank line is inserted for the body and the closing bracket
+ * is pushed down (split_brace), matching common editor behaviour. */
 void editorInsertNewline(void) {
     char *indent    = NULL;
     int   indent_len = 0;
@@ -382,6 +387,7 @@ void editorOpen(char *filename) {
     free(line);
     fclose(fp);
     CB.dirty = 0;
+    lspNotifyOpen(E.buf_current);
 }
 
 void editorSave(void) {
@@ -404,6 +410,7 @@ void editorSave(void) {
                 free(buf);
                 CB.dirty = 0;
                 editorSetStatusMessage("%d bytes written to disk", len);
+                lspNotifySave(E.buf_current);
                 return;
             }
         }

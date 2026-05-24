@@ -4,7 +4,7 @@
 #include <stddef.h>
 
 /* Tiny JSON helpers operating on [start, end) byte spans. Tolerant only of
- * well-formed JSON — sufficient for parsing the message shapes LSP servers
+ * well-formed JSON - sufficient for parsing the message shapes LSP servers
  * emit. */
 
 const char *jsonSkipWS(const char *p, const char *end);

@@ -28,7 +28,7 @@ void editorProcessCommandMode() {
         }
     } else if (strcmp(cmd, "q!") == 0) {
         bufferFree(E.buf_current);
-        if (E.buf_count <= 1)
+        if (E.buf_count == 0)
             clearScreenAndExit();
 
     } else if (strcmp(cmd, "w") == 0) {

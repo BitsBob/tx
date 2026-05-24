@@ -3,6 +3,9 @@
 #include "input.h"
 #include "search.h"
 
+/* editorFindCallback is called by editorPrompt on every keystroke while the
+ * search bar is open. Static locals track the current match and direction so
+ * arrow keys cycle through results without restarting the scan each time. */
 void editorFindCallback(char *query, int key) {
     static int last_match = -1;
     static int direction  = 1;

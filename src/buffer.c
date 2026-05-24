@@ -1,10 +1,14 @@
 #include "tx.h"
 #include "buffer.h"
 #include "editor.h"
+#include "lsp_diag.h"
 #include "output.h"
+#include "terminal.h"
 
 int bufferNew(void) {
-    E.buffers = realloc(E.buffers, sizeof(Buffer) * (E.buf_count + 1));
+    Buffer *tmp = realloc(E.buffers, sizeof(Buffer) * (E.buf_count + 1));
+    if (!tmp) die("bufferNew: realloc");
+    E.buffers = tmp;
     Buffer *b = &E.buffers[E.buf_count];
 
     b->filename = NULL;
@@ -17,6 +21,9 @@ int bufferNew(void) {
     b->coloff = 0;
     b->dirty = 0;
     b->syntax = NULL;
+    b->diags = NULL;
+    b->diags_count = 0;
+    b->lsp_version = 0;
 
     return E.buf_count++;
 }
@@ -44,21 +51,24 @@ void bufferOpen(char *filename) {
 void bufferFree(int idx) {
     Buffer *b = &E.buffers[idx];
 
+    lspNotifyClose(idx);
+
     free(b->filename);
     for (int i = 0; i < b->numrows; i++) {
         editorFreeRow(&b->row[i]);
     }
     free(b->row);
+    free(b->diags);
 
-    memmove(&E.buffers[idx], &E.buffers[idx + 1], sizeof(Buffer) * (E.buf_count - idx - 1)); //remove from array by shifting down
+    memmove(&E.buffers[idx], &E.buffers[idx + 1], sizeof(Buffer) * (E.buf_count - idx - 1));
     E.buf_count--;
 
-    if (E.buf_count == 0) {
-        bufferNew();
-        E.buf_current = 0;
-    } else if (E.buf_current >= E.buf_count) {
+    /* Let the caller detect buf_count == 0 and exit. Do not auto-create a
+     * replacement buffer here — that would prevent :wq and :q! from exiting. */
+    if (E.buf_count == 0) return;
+
+    if (E.buf_current >= E.buf_count)
         E.buf_current = E.buf_count - 1;
-    }
 
     editorSetStatusMessage("Buffer %d/%d: %s", E.buf_current + 1, E.buf_count,
                            CB.filename ? CB.filename : "[No Name]");

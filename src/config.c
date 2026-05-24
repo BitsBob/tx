@@ -21,11 +21,7 @@ static bool parse_bool(const char *val) {
 }
 
 int editorLoadConfig(char *path, struct configOptions *cfg) {
-    FILE *fp = fopen(path, "r");
-    if (!fp)
-        return (errno == ENOENT) ? -1 : -2;
-
-    /* Defaults */
+    /* Set defaults first so they apply even when no config file exists. */
     cfg->CONFIG_TAB_STOP              = 4;
     cfg->CONFIG_UNDO_MAX              = 100;
     cfg->CONFIG_SYNTAX                = false;
@@ -35,6 +31,12 @@ int editorLoadConfig(char *path, struct configOptions *cfg) {
     cfg->CONFIG_NUMBERS               = false;
     cfg->CONFIG_LSP_ENABLE            = false;
     cfg->CONFIG_AUTOPAIR              = true;
+    strncpy(cfg->CONFIG_LSP_CMD, "clangd", sizeof(cfg->CONFIG_LSP_CMD) - 1);
+    cfg->CONFIG_LSP_CMD[sizeof(cfg->CONFIG_LSP_CMD) - 1] = '\0';
+
+    FILE *fp = fopen(path, "r");
+    if (!fp)
+        return (errno == ENOENT) ? -1 : -2;
 
     char line[256];
     int  lineno = 0;
@@ -66,6 +68,10 @@ int editorLoadConfig(char *path, struct configOptions *cfg) {
         else if (strcmp(key, "numbers")           == 0) cfg->CONFIG_NUMBERS               = parse_bool(value);
         else if (strcmp(key, "lsp_enable")        == 0) cfg->CONFIG_LSP_ENABLE            = parse_bool(value);
         else if (strcmp(key, "autopair")          == 0) cfg->CONFIG_AUTOPAIR              = parse_bool(value);
+        else if (strcmp(key, "lsp_cmd")           == 0) {
+            strncpy(cfg->CONFIG_LSP_CMD, value, sizeof(cfg->CONFIG_LSP_CMD) - 1);
+            cfg->CONFIG_LSP_CMD[sizeof(cfg->CONFIG_LSP_CMD) - 1] = '\0';
+        }
         else fprintf(stderr, "config:%d: unknown key '%s'\n", lineno, key);
     }
 

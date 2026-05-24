@@ -7,6 +7,7 @@
 
 #include "buffer.h"
 #include "config.h"
+#include "lsp.h"
 #include "row.h"
 
 enum pendingOperations {
@@ -48,7 +49,6 @@ struct editorConfig {
     int last_cx, last_cy;
     int last_rowoff;
     int mode;
-    int tab_stop;
     int pendingOp;
     int screencols;
     int screenrows;
@@ -57,6 +57,7 @@ struct editorConfig {
     struct termios orig_termios;
     time_t statusmsg_time;
     struct configOptions settings;
+    LspClient *lsp;
 };
 
 extern struct editorConfig E;

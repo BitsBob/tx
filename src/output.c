@@ -1,5 +1,6 @@
 #include "tx.h"
 #include "editor.h"
+#include "lsp_diag.h"
 #include "output.h"
 #include "syntax.h"
 
@@ -86,7 +87,8 @@ static void editorDrawRows(struct abuf *ab) {
     n /= 10;
   }
 
-  int gutter = E.settings.CONFIG_NUMBERS ? digits + 1 : 0;
+  int lsp_active = lspIsReady();
+  int gutter = (E.settings.CONFIG_NUMBERS ? digits + 1 : 0) + (lsp_active ? 2 : 0);
   E.gutter_width = gutter;
 
   int y;
@@ -113,6 +115,21 @@ static void editorDrawRows(struct abuf *ab) {
         abAppend(ab, "~", 1);
       }
     } else {
+      if (lsp_active) {
+        int sev = (CB.diags && filerow < CB.diags_count) ? CB.diags[filerow] : 0;
+        const char *color;
+        const char *marker;
+        switch (sev) {
+          case 1:  color = "\x1b[31m"; marker = "E"; break; /* error   - red    */
+          case 2:  color = "\x1b[33m"; marker = "W"; break; /* warning - yellow */
+          case 3:  color = "\x1b[36m"; marker = "I"; break; /* info    - cyan   */
+          case 4:  color = "\x1b[90m"; marker = "H"; break; /* hint    - dim    */
+          default: color = "\x1b[90m"; marker = " "; break; /* none             */
+        }
+        abAppend(ab, color, 5);
+        abAppend(ab, marker, 1);
+        abAppend(ab, " \x1b[m", 4);
+      }
       if (E.settings.CONFIG_NUMBERS) {
         char linenum[16];
         int ln_len = snprintf(linenum, sizeof(linenum), "%*d ", digits, filerow + 1);
@@ -236,6 +253,7 @@ static void editorDrawMessageBar(struct abuf *ab) {
 }
 
 void editorRefreshScreen() {
+  lspPoll();
   editorScroll();
 
   struct abuf ab = ABUF_INIT;

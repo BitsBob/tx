@@ -4,6 +4,10 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+/* Fork the language server as a child process connected to us via two pipes.
+ * The child's stdin/stdout become those pipes; we get file descriptors for
+ * writing to it (in_fd) and reading from it (out_fd).
+ * out_fd is set non-blocking so lspRead never stalls the editor. */
 LspClient *lspStart(const char *server_cmd[]) {
     int to_server[2];
     int from_server[2];
@@ -22,6 +26,7 @@ LspClient *lspStart(const char *server_cmd[]) {
     }
 
     if (pid == 0) {
+        /* Child: rewire stdio then exec the server. */
         dup2(to_server[0], STDIN_FILENO);
         dup2(from_server[1], STDOUT_FILENO);
 
@@ -33,6 +38,7 @@ LspClient *lspStart(const char *server_cmd[]) {
         _exit(1);
     }
 
+    /* Parent: keep only the write end of to_server and the read end of from_server. */
     close(to_server[0]);
     close(from_server[1]);
 
@@ -71,6 +77,8 @@ void lspStop(LspClient *c) {
     free(c);
 }
 
+/* Write a JSON-RPC message to the server.
+ * LSP framing is a Content-Length header followed by a blank line, then the body. */
 void lspSend(LspClient *c, const char *message) {
     if (!c || !c->active || !message) return;
 
@@ -98,6 +106,7 @@ void lspSend(LspClient *c, const char *message) {
     }
 }
 
+/* Grow the receive buffer to have at least `headroom` bytes free. */
 static int rx_reserve(LspClient *c, size_t headroom) {
     if (c->rx_cap - c->rx_len >= headroom) return 0;
     size_t new_cap = c->rx_cap ? c->rx_cap : 8192;
@@ -109,10 +118,14 @@ static int rx_reserve(LspClient *c, size_t headroom) {
     return 0;
 }
 
+/* Read and return the next complete JSON-RPC message body, or NULL if no
+ * complete message is buffered yet. The caller owns the returned string.
+ * Partial data stays in rx_buf for the next call. Because out_fd is
+ * non-blocking, this returns quickly when the server has nothing new. */
 char *lspRead(LspClient *c) {
     if (!c || !c->active) return NULL;
 
-    /* Drain whatever is currently readable. */
+    /* Pull everything currently readable into the buffer. */
     for (;;) {
         if (rx_reserve(c, 4096) != 0) break;
         ssize_t n = read(c->out_fd, c->rx_buf + c->rx_len,
@@ -121,10 +134,7 @@ char *lspRead(LspClient *c) {
             c->rx_len += (size_t)n;
             continue;
         }
-        if (n == 0) {
-            c->active = 0;
-            break;
-        }
+        if (n == 0) { c->active = 0; break; }
         if (errno == EAGAIN || errno == EWOULDBLOCK) break;
         if (errno == EINTR) continue;
         c->active = 0;
@@ -133,22 +143,22 @@ char *lspRead(LspClient *c) {
 
     if (c->rx_len == 0) return NULL;
 
-    /* Find end of headers. */
+    /* Look for the blank line that terminates the headers. */
     char *sep = memmem(c->rx_buf, c->rx_len, "\r\n\r\n", 4);
     if (!sep) return NULL;
 
     size_t header_len = (size_t)(sep - c->rx_buf);
     size_t body_start = header_len + 4;
 
-    /* Find Content-Length within the header span. */
     char *cl = memmem(c->rx_buf, header_len, "Content-Length:", 15);
     if (!cl) return NULL;
     cl += 15;
 
-    char  *endptr = NULL;
-    long   clen   = strtol(cl, &endptr, 10);
+    char *endptr = NULL;
+    long  clen   = strtol(cl, &endptr, 10);
     if (endptr == cl || clen <= 0) return NULL;
 
+    /* Wait until the full body has arrived. */
     if (c->rx_len - body_start < (size_t)clen) return NULL;
 
     char *body = malloc((size_t)clen + 1);
@@ -156,6 +166,7 @@ char *lspRead(LspClient *c) {
     memcpy(body, c->rx_buf + body_start, (size_t)clen);
     body[clen] = '\0';
 
+    /* Slide any remaining data to the front of the buffer. */
     size_t consumed = body_start + (size_t)clen;
     size_t leftover = c->rx_len - consumed;
     if (leftover > 0)

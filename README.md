@@ -100,6 +100,7 @@ Supported languages:
 - [x] Multiple buffers
 - [x] Window resize handling
 - [x] Line numbers
+- [x] LSP
 - [ ] Relative line numbers
 - [ ] Dot operator (`.` to repeat last action)
 - [ ] Visual block mode (`Ctrl+v`)

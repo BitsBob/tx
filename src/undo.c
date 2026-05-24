@@ -3,25 +3,30 @@
 #include "output.h"
 #include "undo.h"
 
+/* Undo works by snapshotting the affected rows before and after each edit.
+ * Each entry stores the old text and the new text for a contiguous range
+ * starting at `top`. Undoing replays old_lines; redoing replays new_lines.
+ * Cursor positions are saved so undo lands the cursor where it was. */
 typedef struct u_entry u_entry_T;
 struct u_entry {
-  u_entry_T *next;
-  int top;
-  int old_count;
-  char **old_lines;
-  int new_count;
-  char **new_lines;
-  int cx_before, cy_before;
-  int cx_after, cy_after;
+    u_entry_T *next;
+    int top;           /* first row of the affected range */
+    int old_count;     /* number of rows in old_lines */
+    char **old_lines;
+    int new_count;     /* number of rows in new_lines */
+    char **new_lines;
+    int cx_before, cy_before;  /* cursor before the edit */
+    int cx_after,  cy_after;   /* cursor after the edit */
 };
 
 static u_entry_T *u_undo_stack = NULL;
 static u_entry_T *u_redo_stack = NULL;
 static int u_undo_len = 0;
 
+/* Pending state held between undoBegin and undoCommit. */
 static int    u_pending = 0;
 static int    u_p_top = 0;
-static int    u_p_numrows = 0;
+static int    u_p_numrows = 0;   /* total row count before the edit */
 static int    u_p_old_count = 0;
 static char **u_p_old_lines = NULL;
 static int    u_p_cx = 0, u_p_cy = 0;
@@ -66,6 +71,7 @@ static int lines_equal(char **a, int ac, char **b, int bc) {
   return 1;
 }
 
+/* Drop oldest entries beyond TX_UNDO_MAX to keep memory bounded. */
 static void trim_undo(void) {
   if (u_undo_len <= TX_UNDO_MAX) return;
   u_entry_T *cur = u_undo_stack, *prev = NULL;
