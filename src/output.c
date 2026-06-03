@@ -81,6 +81,82 @@ static int isCharSelected(int x, int y) {
   return 1;
 }
 
+/* Advance (y,x) one char position in direction dir (+1/-1), skipping over line boundaries (and empty lines). Returns 0 when the buffer edge is hit. */
+static int braceStep(int *y, int *x, int dir) {
+  *x += dir;
+  for (;;) {
+    if (*y < 0 || *y >= CB.numrows) return 0;
+    if (*x < 0) {
+      if (--(*y) < 0) return 0;
+      *x = CB.row[*y].size - 1;
+    } else if (*x >= CB.row[*y].size) {
+      if (++(*y) >= CB.numrows) return 0;
+      *x = 0;
+    } else {
+      return 1;
+    }
+  }
+}
+
+static int isBraceChar(char c) {
+  return c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}';
+}
+
+/* If the cursor sits on a bracket -- or directly in front of one (the
+ * insert-mode caret rests just after it) -- find its match. On success the
+ * source bracket's char coordinates are written to by/bx and its pair to
+ * my/mx, and 1 is returned. Braces inside strings and comments are skipped so
+ * they don't throw off the nesting count. */
+static int editorFindMatchingBrace(int *by, int *bx, int *my, int *mx) {
+  if (CB.cy < 0 || CB.cy >= CB.numrows) return 0;
+  erow *row = &CB.row[CB.cy];
+
+  /* Prefer the char under the cursor, then the one immediately before it. */
+  int cx = -1;
+  if (CB.cx >= 0 && CB.cx < row->size && isBraceChar(row->chars[CB.cx])) {
+    cx = CB.cx;
+  } else if (CB.cx - 1 >= 0 && CB.cx - 1 < row->size && isBraceChar(row->chars[CB.cx - 1])) {
+    cx = CB.cx - 1;
+  }
+  if (cx < 0) return 0;
+
+  char c = row->chars[cx];
+  const char *opens = "([{", *closes = ")]}";
+  const char *p;
+  int dir;
+  char self = c, other;
+  if ((p = strchr(opens, c)) != NULL && *p) {
+    dir = 1;  other = closes[p - opens];
+  } else {
+    p = strchr(closes, c);
+    dir = -1; other = opens[p - closes];
+  }
+
+  int y = CB.cy, x = cx, balance = 0;
+  for (;;) {
+    erow *r = &CB.row[y];
+    int skip = 0;
+    if (!(y == CB.cy && x == cx)) {
+      int rx = editorRowCxToRx(r, x);
+      if (rx < r->rsize) {
+        unsigned char h = r->hl[rx];
+        if (h == HL_STRING || h == HL_COMMENT || h == HL_MLCOMMENT) skip = 1;
+      }
+    }
+    if (!skip) {
+      char ch = r->chars[x];
+      if (ch == self) balance++;
+      else if (ch == other) balance--;
+      if (balance == 0) {
+        *by = CB.cy; *bx = cx;
+        *my = y; *mx = x;
+        return 1;
+      }
+    }
+    if (!braceStep(&y, &x, dir)) return 0;
+  }
+}
+
 static void editorDrawRows(struct abuf *ab) {
   int digits = 1, n= CB.numrows;
   while (n >= 10) {
@@ -91,6 +167,18 @@ static void editorDrawRows(struct abuf *ab) {
   int lsp_active = lspIsReady();
   int gutter = (E.settings.CONFIG_NUMBERS ? digits + 1 : 0) + (lsp_active ? 2 : 0);
   E.gutter_width = gutter;
+
+  /* Matching-brace highlight: the bracket under the cursor and its pair, stored in render coordinates so they line up with the draw loop. */
+  int brace_active = 0;
+  int b1_row = -1, b1_rx = -1, b2_row = -1, b2_rx = -1;
+  {
+    int by, bx, my, mx;
+    if (editorFindMatchingBrace(&by, &bx, &my, &mx)) {
+      brace_active = 1;
+      b1_row = by; b1_rx = editorRowCxToRx(&CB.row[by], bx);
+      b2_row = my; b2_rx = editorRowCxToRx(&CB.row[my], mx);
+    }
+  }
 
   int y;
   for (y = 0; y < E.screenrows; y++) {
@@ -146,11 +234,18 @@ static void editorDrawRows(struct abuf *ab) {
       char *render = (len > 0) ? &CB.row[filerow].render[CB.coloff] : NULL;
       unsigned char *hl = (len > 0) ? &CB.row[filerow].hl[CB.coloff] : NULL;
       int in_selection = 0;
+      int in_brace = 0;
       int current_color = -1;
+
+#define IS_BRACE_CELL(absrx)                                  \
+  (brace_active && (((filerow) == b1_row && (absrx) == b1_rx) || \
+                    ((filerow) == b2_row && (absrx) == b2_rx)))
 
       int j = 0;
       while (j < len) {
-        int selected = (E.mode == MODE_VISUAL || E.mode == MODE_VISUAL_LINE) && isCharSelected(j + CB.coloff, filerow);
+        int absrx = j + CB.coloff;
+        int selected = (E.mode == MODE_VISUAL || E.mode == MODE_VISUAL_LINE) && isCharSelected(absrx, filerow);
+        int brace = IS_BRACE_CELL(absrx);
         int color = (E.settings.CONFIG_SYNTAX && hl[j] != HL_NORMAL)
               ? editorSyntaxToColor(hl[j])
               : -1;
@@ -161,6 +256,14 @@ static void editorDrawRows(struct abuf *ab) {
         } else if (!selected && in_selection) {
           abAppend(ab, "\x1b[27m", 5);
           in_selection = 0;
+        }
+
+        if (brace && !in_brace) {
+          abAppend(ab, "\x1b[4m", 4);
+          in_brace = 1;
+        } else if (!brace && in_brace) {
+          abAppend(ab, "\x1b[24m", 5);
+          in_brace = 0;
         }
 
         if (color != current_color) {
@@ -177,15 +280,20 @@ static void editorDrawRows(struct abuf *ab) {
         int run_start = j;
         j++;
         while (j < len) {
-          int next_selected = (E.mode == MODE_VISUAL || E.mode == MODE_VISUAL_LINE) && isCharSelected(j + CB.coloff, filerow);
+          int next_absrx = j + CB.coloff;
+          int next_selected = (E.mode == MODE_VISUAL || E.mode == MODE_VISUAL_LINE) && isCharSelected(next_absrx, filerow);
+          int next_brace = IS_BRACE_CELL(next_absrx);
           int next_color = (hl[j] == HL_NORMAL) ? -1 : editorSyntaxToColor(hl[j]);
-          if (next_selected != selected || next_color != color)
+          if (next_selected != selected || next_brace != brace || next_color != color)
             break;
           j++;
         }
         abAppend(ab, &render[run_start], j - run_start);
       }
 
+#undef IS_BRACE_CELL
+
+      if (in_brace) abAppend(ab, "\x1b[24m", 5);
       abAppend(ab, "\x1b[39m", 5);
       if (in_selection) abAppend(ab, "\x1b[m", 3);
     }
