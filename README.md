@@ -21,7 +21,6 @@ set syntax                true
 set line_numbers          true
 set status_fortune        true
 set search_highlight      true
-set search_sensitive      false
 ```
 
 ## Keybindings

@@ -1,4 +1,7 @@
-#include "tx.h"
+#include <ctype.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "editor.h"
 #include "syntax.h"
 

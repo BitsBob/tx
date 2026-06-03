@@ -1,4 +1,6 @@
-#include "tx.h"
+#include <stdlib.h>
+#include <string.h>
+
 #include "editor.h"
 #include "input.h"
 #include "search.h"

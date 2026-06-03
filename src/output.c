@@ -1,4 +1,5 @@
 #include "tx.h"
+
 #include "editor.h"
 #include "lsp_diag.h"
 #include "output.h"

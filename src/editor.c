@@ -1,4 +1,13 @@
 #include "tx.h"
+
+#include <ctype.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #include "editor.h"
 #include "input.h"
 #include "lsp_diag.h"

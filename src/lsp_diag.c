@@ -1,11 +1,12 @@
-#include "tx.h"
+#include <limits.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "editor.h"
 #include "lsp.h"
 #include "lsp_diag.h"
 #include "lsp_json.h"
 #include "lsp_msg.h"
-
-#include <limits.h>
 
 /* Server lifecycle: UNINIT -> INIT_SENT (after we write "initialize") -> READY
  * (after the server responds). Only READY state sends further notifications. */

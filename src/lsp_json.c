@@ -1,5 +1,6 @@
-#include "tx.h"
 #include "lsp_json.h"
+#include <stdlib.h>
+#include <string.h>
 
 const char *jsonSkipWS(const char *p, const char *end) {
     while (p < end && (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r'))

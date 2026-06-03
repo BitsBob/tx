@@ -1,10 +1,10 @@
-#include "tx.h"
 #include "command.h"
 #include "editor.h"
 #include "input.h"
 #include "output.h"
 #include "search.h"
 #include "terminal.h"
+#include "tx.h"
 #include "undo.h"
 #include "visual.h"
 

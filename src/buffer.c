@@ -1,4 +1,6 @@
-#include "tx.h"
+#include <stdlib.h>
+#include <string.h>
+
 #include "buffer.h"
 #include "editor.h"
 #include "lsp_diag.h"

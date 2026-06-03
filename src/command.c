@@ -1,4 +1,8 @@
-#include "tx.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
 #include "buffer.h"
 #include "command.h"
 #include "editor.h"
